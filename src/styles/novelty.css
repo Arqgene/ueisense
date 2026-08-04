@@ -1,0 +1,118 @@
+.novelty-bento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .novelty-bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .novelty-bento-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.bento-card {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Bento card sizing modifiers */
+@media (min-width: 1024px) {
+  .bento-card.col-span-2 {
+    grid-column: span 2;
+  }
+  .bento-card.row-span-2 {
+    grid-row: span 2;
+    min-height: 584px;
+  }
+}
+
+.bento-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(0, 242, 254, 0.06);
+  border: 1px solid rgba(0, 242, 254, 0.15);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  transition: var(--transition-smooth);
+}
+
+.bento-card:hover .bento-icon-wrapper {
+  background: var(--primary);
+  color: #030712;
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+  transform: scale(1.05);
+}
+
+.bento-card.purple-theme .bento-icon-wrapper {
+  background: rgba(168, 85, 247, 0.06);
+  border-color: rgba(168, 85, 247, 0.15);
+  color: var(--secondary);
+}
+
+.bento-card.purple-theme:hover .bento-icon-wrapper {
+  background: var(--secondary);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+}
+
+.bento-card.emerald-theme .bento-icon-wrapper {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.15);
+  color: var(--accent);
+}
+
+.bento-card.emerald-theme:hover .bento-icon-wrapper {
+  background: var(--accent);
+  color: #030712;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.bento-info {
+  text-align: left;
+}
+
+.bento-title {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-bright);
+  margin-bottom: 12px;
+}
+
+.bento-desc {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* Background visual representation for bento cards */
+.bento-visual-bg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 50%;
+  opacity: 0.15;
+  pointer-events: none;
+  transition: var(--transition-smooth);
+}
+
+.bento-card:hover .bento-visual-bg {
+  opacity: 0.3;
+  transform: scale(1.03);
+}

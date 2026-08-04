@@ -1,0 +1,44 @@
+/* Doctor Portal & Map Styles */
+
+.doctor-page-wrapper {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+/* User Pulse Ring for Map */
+.user-pulse-ring::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border-radius: 50%;
+  background-color: rgba(37, 99, 235, 0.4);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Doctors Map Responsive Grid */
+@media (max-width: 900px) {
+  .doctors-map-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .doctor-login-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

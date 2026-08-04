@@ -1,0 +1,211 @@
+.pipeline-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (min-width: 992px) {
+  .pipeline-grid {
+    grid-template-columns: 1fr 1.2fr;
+  }
+}
+
+.pipeline-info {
+  text-align: left;
+}
+
+.pipeline-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 32px;
+}
+
+.pipeline-step-item {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.pipeline-step-item.active {
+  background: rgba(0, 242, 254, 0.04);
+  border-color: rgba(0, 242, 254, 0.15);
+}
+
+.pipeline-step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+}
+
+.pipeline-step-item.active .pipeline-step-number {
+  background: var(--primary);
+  color: #030712;
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+}
+
+.pipeline-step-text {
+  text-align: left;
+}
+
+.pipeline-step-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+  transition: var(--transition-fast);
+}
+
+.pipeline-step-item.active .pipeline-step-title {
+  color: var(--text-bright);
+}
+
+.pipeline-step-desc {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* Interactive Pipeline Display Card */
+.pipeline-display-card {
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.pipeline-display-glow {
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.glow-blue {
+  background: rgba(0, 242, 254, 0.12);
+  top: 10%;
+  left: 10%;
+}
+
+.glow-purple {
+  background: rgba(168, 85, 247, 0.12);
+  bottom: 10%;
+  right: 10%;
+}
+
+.pipeline-interactive-view {
+  width: 100%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/* Connector line */
+.pipeline-visual-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  position: relative;
+  max-width: 480px;
+}
+
+.pipeline-flow-connector {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(0, 242, 254, 0.1), rgba(168, 85, 247, 0.1));
+  z-index: 1;
+}
+
+.flow-connector-active {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 10px var(--primary);
+}
+
+.pipeline-node {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(11, 13, 20, 0.9);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  position: relative;
+  transition: var(--transition-smooth);
+}
+
+.pipeline-node.active {
+  color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.3);
+  transform: scale(1.15);
+}
+
+.pipeline-node.completed {
+  color: var(--secondary);
+  border-color: var(--secondary);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+}
+
+.pipeline-content-details {
+  background: rgba(6, 7, 10, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.pipeline-details-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+
+.pipeline-details-desc {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
