@@ -17,9 +17,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# 1. Install Python dependencies
+# 1. Install Lightweight CPU PyTorch & Python dependencies
 COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir -r backend/requirements.txt
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r backend/requirements.txt
 
 # 2. Install Node dependencies & build React Frontend
 COPY package.json package-lock.json ./
