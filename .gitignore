@@ -5,9 +5,8 @@ npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# Node dependencies & builds
+# Node dependencies
 node_modules
-dist
 dist-ssr
 *.local
 

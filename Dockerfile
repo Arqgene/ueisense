@@ -1,18 +1,5 @@
-# ── STAGE 1: Build React Frontend ──────────────────────────────────────────────
-FROM node:20-slim AS frontend-builder
-RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-
-COPY package.json ./
-RUN npm install
-
-COPY index.html vite.config.js eslint.config.js ./
-COPY public ./public
-COPY src ./src
-RUN npm run build && npm cache clean --force
-
-# ── STAGE 2: Production Server Runtime ───────────────────────────────────────
-FROM python:3.10-slim AS runner
+# Single-Stage Ultra-Lightweight Production Runtime
+FROM python:3.10-slim
 
 # Install Node.js 20 & minimal system tools for C++ native sqlite build
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,10 +23,8 @@ RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/wh
 COPY server/package.json ./server/package.json
 RUN cd server && npm install --omit=dev && npm cache clean --force
 
-# Copy pre-built frontend static assets from Stage 1
-COPY --from=frontend-builder /app/dist ./dist
-
-# Copy backend python code & server express code
+# Copy pre-built dist static assets and application code
+COPY dist ./dist
 COPY backend ./backend
 COPY server ./server
 COPY start.sh ./start.sh
