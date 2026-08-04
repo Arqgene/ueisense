@@ -20,7 +20,6 @@ const fs      = require("fs");
 const db      = require("./db");
 
 const app  = express();
-const PORT = 3001;
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors({ origin: "*" }));
@@ -481,7 +480,7 @@ app.post("/api/predict", async (req, res) => {
 const DIST_DIR = path.join(__dirname, "..", "dist");
 if (fs.existsSync(DIST_DIR)) {
   app.use(express.static(DIST_DIR));
-  app.get("*", (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith("/api") || req.path.startsWith("/uploads")) return next();
     res.sendFile(path.join(DIST_DIR, "index.html"));
   });
