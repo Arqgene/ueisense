@@ -7,11 +7,11 @@ services:
       dockerfile: Dockerfile
     container_name: uveitis_system
     ports:
-      - "80:3001"
-      - "3001:3001"
+      - "80:80"
+      - "3001:80"
       - "8000:8000"
     environment:
-      - PORT=3001
+      - PORT=80
       - PYTHON_BACKEND_URL=http://127.0.0.1:8000/predict
     volumes:
       - sqlite_data:/app/server/db

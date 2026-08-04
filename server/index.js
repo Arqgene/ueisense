@@ -488,7 +488,7 @@ if (fs.existsSync(DIST_DIR)) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 80;
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`\n🚀 Uveitis DB API running at http://0.0.0.0:${PORT}`);
   console.log(`   📋 Layers covered: L1-L7 (patients, questionnaire, NF results, assessments, imaging, CNN, review, diagnosis)`);

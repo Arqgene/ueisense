@@ -35,8 +35,8 @@ COPY . .
 # 4. Build Vite production bundle into /app/dist
 RUN npm run build
 
-# Expose HTTP port
-EXPOSE 3001 8000
+# Expose HTTP port 80 (standard web port) and 8000
+EXPOSE 80 3001 8000
 
 # Make start script executable
 RUN chmod +x ./start.sh
