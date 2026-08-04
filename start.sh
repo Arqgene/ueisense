@@ -7,5 +7,5 @@ python3 backend/server.py &
 # Wait for Python backend to initialize
 sleep 3
 
-echo "🚀 Starting Node Express Database API & Web Host..."
+echo "🚀 Starting Node Express Database API & Web Host on Port 80..."
 exec node server/index.js

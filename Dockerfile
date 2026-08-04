@@ -34,6 +34,6 @@ ENV PORT=80
 ENV PYTHON_BACKEND_URL=http://127.0.0.1:8000/predict
 
 EXPOSE 80 3001 8000
-RUN chmod +x ./start.sh
+RUN sed -i 's/\r$//' ./start.sh && chmod +x ./start.sh
 
 CMD ["./start.sh"]
