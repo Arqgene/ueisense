@@ -1,9 +1,10 @@
 # ── STAGE 1: Build React Frontend ──────────────────────────────────────────────
 FROM node:20-slim AS frontend-builder
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 
 COPY index.html vite.config.js eslint.config.js ./
 COPY public ./public
@@ -13,10 +14,12 @@ RUN npm run build && npm cache clean --force
 # ── STAGE 2: Production Server Runtime ───────────────────────────────────────
 FROM python:3.10-slim AS runner
 
-# Install Node.js 20 & minimal system tools
+# Install Node.js 20 & minimal system tools for C++ native sqlite build
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     sqlite3 \
+    build-essential \
+    python3-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
