@@ -1,45 +1,51 @@
-# Dockerfile for Full-Stack Uveitis AI Diagnosis System
-# Includes React Frontend static build + Node.js Express SQLite API + Python PyTorch FastAPI Backend
+# ── STAGE 1: Build React Frontend ──────────────────────────────────────────────
+FROM node:20-slim AS frontend-builder
+WORKDIR /app
 
-FROM python:3.10-slim
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Install Node.js 20 and system build tools
+COPY index.html vite.config.js eslint.config.js ./
+COPY public ./public
+COPY src ./src
+RUN npm run build && npm cache clean --force
+
+# ── STAGE 2: Production Server Runtime ───────────────────────────────────────
+FROM python:3.10-slim AS runner
+
+# Install Node.js 20 & minimal system tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    gnupg \
-    build-essential \
-    python3-dev \
     sqlite3 \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 WORKDIR /app
 
-# 1. Install Lightweight CPU PyTorch & Python dependencies
+# Install Python requirements (CPU PyTorch)
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r backend/requirements.txt
 
-# 2. Install Node dependencies & build React Frontend
-COPY package.json package-lock.json ./
-RUN npm ci --include=dev
-
+# Install Node server production dependencies
 COPY server/package.json ./server/package.json
-RUN cd server && npm install
+RUN cd server && npm install --omit=dev && npm cache clean --force
 
-# 3. Copy application code
-COPY . .
+# Copy pre-built frontend static assets from Stage 1
+COPY --from=frontend-builder /app/dist ./dist
 
-# 4. Build Vite production bundle into /app/dist
-RUN npm run build
+# Copy backend python code & server express code
+COPY backend ./backend
+COPY server ./server
+COPY start.sh ./start.sh
 
-# Expose HTTP port 80 (standard web port) and 8000
+# Environment & Execution setup
+ENV PORT=80
+ENV PYTHON_BACKEND_URL=http://127.0.0.1:8000/predict
+
 EXPOSE 80 3001 8000
-
-# Make start script executable
 RUN chmod +x ./start.sh
 
-# Default launch command
 CMD ["./start.sh"]
