@@ -107,33 +107,27 @@ const steps = [
   {
     id: "associatedSymptoms",
     title: "2. Associated Eye Symptoms",
-    subtitle: "Do you also have any of these related eye symptoms?",
-    tip: "These symptoms help separate inflammatory disease from routine irritation or strain.",
+    subtitle: "Questions related to daily activities?",
+    tip: "These daily activities help separate inflammatory disease from routine irritation or strain.",
   },
   {
     id: "eyeHistory",
-    title: "3. Eye History & Recurrence",
-    subtitle: "Tell us about prior eye events or treatments.",
-    tip: "Past inflammation, steroid use, or eye trauma can raise recurrence and severity risk.",
+    title: "3. Medical History & Recurrence",
+    subtitle: "Questions related to Medical History?",
+    tip: "Past Medical History can raise recurrence and severity risk.",
   },
   {
     id: "medicalHistory",
-    title: "4. Systemic Medical History",
-    subtitle: "Information regarding your general health and diagnoses.",
-    tip: "Systemic inflammatory or infectious conditions can be linked to uveitis.",
+    title: "4. Systemic General Health History",
+    subtitle: "Questions related to General Health?",
+    tip: "General Health can be linked to uveitis.",
   },
-  {
-    id: "exposureMeds",
-    title: "5. Infection, Exposure & Medications",
-    subtitle: "Recent exposures and medicine details.",
-    tip: "Exposure and medication history help the clinician narrow the differential diagnosis.",
-  },
-  {
-    id: "familyGeneral",
-    title: "6. Family History & Demographics",
-    subtitle: "Review family background and personal risk factors.",
-    tip: "Family history and demographics provide additional context for the prediction model.",
-  },
+   {
+    id: "medicalHistory",
+    title: "4. Systemic General Health History",
+    subtitle: "Questions related to General Health?",
+    tip: "General Health can be linked to uveitis.",
+  }
 ];
 
 const rightShoulder = (x, a, b) => {
@@ -663,14 +657,14 @@ export default function UveitisQuestionnaire() {
                     <div className="uf-grid" style={{ gap: "24px" }}>
                       <div className="uf-pill-container">
                         <FuzzyToggleRow label="Do you see floaters, moving spots, or cobweb-like shadows?" fieldKey="floaters" />
-                        <FuzzyToggleRow label="Do you have tearing or watering?" fieldKey="tearing" />
-                        <FuzzyToggleRow label="Do you have discharge from the eye?" fieldKey="discharge" />
-                        <FuzzyToggleRow label="Is there any swelling around the eye?" fieldKey="swelling" />
-                        <FuzzyToggleRow label="Do you feel any headache along with the eye problem?" fieldKey="headache" />
-                        <FuzzyToggleRow label="Do you notice worsening of symptoms in bright light?" fieldKey="bright_light_worsening" />
-                        <FuzzyToggleRow label="Has your vision become hazy or cloudy?" fieldKey="hazy_vision" />
-                        <FuzzyToggleRow label="Do you have glare or halos around lights?" fieldKey="glare_halos" />
-                        <FuzzyToggleRow label="Do you notice any loss of side (peripheral) vision?" fieldKey="peripheral_vision_loss" />
+                        <FuzzyToggleRow label="Have you owned or currently own a pet?" fieldKey="tearing" />
+                        <FuzzyToggleRow label="Have you eaten untreated or unpasteurized meat or dairy products?" fieldKey="discharge" />
+                        <FuzzyToggleRow label="Have you consumed untreated or unfiltered water?" fieldKey="swelling" />
+                        <FuzzyToggleRow label="Have you ever injected recreational drugs intravenously?" fieldKey="headache" />
+                        <FuzzyToggleRow label="Have you taken birth-control pills?" fieldKey="bright_light_worsening" />
+                        <FuzzyToggleRow label="Have you had frequent or prolonged exposure to dust, smoke, or air pollution?" fieldKey="hazy_vision" />
+                        <FuzzyToggleRow label="Have you had regular contact with animals or animal waste?" fieldKey="glare_halos" />
+                        <FuzzyToggleRow label="Have you traveled recently to an area with a high risk of infectious diseases?" fieldKey="peripheral_vision_loss" />
                       </div>
                     </div>
                   )}
@@ -696,11 +690,11 @@ export default function UveitisQuestionnaire() {
                           </div>
                         )}
 
-                        <FuzzyToggleRow label="Have you had eye trauma or injury?" fieldKey="eye_trauma" />
-                        <FuzzyToggleRow label="Have you had eye surgery?" fieldKey="eye_surgery" />
-                        <FuzzyToggleRow label="Do you wear contact lenses?" fieldKey="contact_lens" />
-                        <FuzzyToggleRow label="Have you used steroid eye drops before?" fieldKey="steroid_eye_drop_use" />
-                        <FuzzyToggleRow label="Have you taken treatment for this eye problem already?" fieldKey="prior_treatment" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a chronic or systemic disease?" fieldKey="eye_trauma" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a respiratory disease?" fieldKey="eye_surgery" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a viral or contagious disease?" fieldKey="contact_lens" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a sexually transmitted disease?" fieldKey="steroid_eye_drop_use" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a bacterial disease or infection?" fieldKey="prior_treatment" />
                       </div>
                     </div>
                   )}
@@ -708,17 +702,17 @@ export default function UveitisQuestionnaire() {
                   {stepIndex === 3 && (
                     <div className="uf-grid">
                       <div className="uf-pill-container">
-                        <FuzzyToggleRow label="Do you have any autoimmune disease?" fieldKey="autoimmune_disease" />
-                        <FuzzyToggleRow label="Do you have tuberculosis (TB) or have you been exposed to TB?" fieldKey="tuberculosis" />
-                        <FuzzyToggleRow label="Have you ever had syphilis or tested positive for it?" fieldKey="syphilis" />
-                        <FuzzyToggleRow label="Do you have a condition that weakens immunity?" fieldKey="immunocompromised" />
-                        <FuzzyToggleRow label="Have you had a recent infection?" fieldKey="recent_infection" />
-                        <FuzzyToggleRow label="Have you had a fever recently?" fieldKey="fever" />
-                        <FuzzyToggleRow label="Have you had unexplained weight loss recently?" fieldKey="weight_loss" />
-                        <FuzzyToggleRow label="Have you had a persistent cough recently?" fieldKey="cough" />
-                        <FuzzyToggleRow label="Have you had joint pain recently?" fieldKey="joint_pain" />
-                        <FuzzyToggleRow label="Have you had a skin rash recently?" fieldKey="skin_rash" />
-                        <FuzzyToggleRow label="Have you had oral ulcers recently?" fieldKey="oral_ulcers" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a fungal disease or infection?" fieldKey="autoimmune_disease" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a parasitic disease or infection?" fieldKey="tuberculosis" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with an allergy?" fieldKey="syphilis" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with an autoimmune or rheumatic disease?" fieldKey="immunocompromised" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with an inflammatory disease?" fieldKey="recent_infection" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with a neurological disease?" fieldKey="fever" />
+                        <FuzzyToggleRow label="Have you ever been diagnosed with an eye-related disease or condition?" fieldKey="weight_loss" />
+                        <FuzzyToggleRow label="Have you recently experienced fever, chills, or unexplained fatigue?" fieldKey="cough" />
+                        <FuzzyToggleRow label="Have you recently experienced a persistent cough or difficulty breathing?" fieldKey="joint_pain" />
+                        <FuzzyToggleRow label="Have you recently experienced unexplained weight loss or loss of appetite?" fieldKey="skin_rash" />
+                        <FuzzyToggleRow label="Have you recently experienced persistent pain or swelling?" fieldKey="oral_ulcers" />
                       </div>
                     </div>
                   )}
@@ -732,6 +726,7 @@ export default function UveitisQuestionnaire() {
                         <FuzzyToggleRow label="Have you traveled recently?" fieldKey="recent_travel" />
                         <FuzzyToggleRow label="Have you been exposed to cats, birds, or farm animals recently?" fieldKey="animal_exposure" />
                         <FuzzyToggleRow label="Have you had untreated water or questionable food exposure recently?" fieldKey="unsafe_food_water" />
+                        <FuzzyToggleRow label="Have you recently experienced recurring headaches, dizziness, or weakness?" fieldKey="recent_travel" />
                       </div>
 
                       <div className="uf-field-group">
@@ -745,177 +740,11 @@ export default function UveitisQuestionnaire() {
                         />
                       </div>
 
-                      <div className="uf-pill-container">
-                        <FuzzyToggleRow label="Are you taking steroid tablets?" fieldKey="steroid_tablets" />
-                        <FuzzyToggleRow label="Are you taking steroid injections?" fieldKey="steroid_injections" />
-                        <FuzzyToggleRow label="Are you using steroid inhalers?" fieldKey="steroid_inhalers" />
-                        <FuzzyToggleRow label="Are you taking immune-suppressing medicines?" fieldKey="immunosuppressants" />
-                        <FuzzyToggleRow label="Have you started any new medications recently?" fieldKey="new_medication" />
-                      </div>
+                      
                     </div>
                   )}
 
-                  {stepIndex === 5 && (
-                    <div className="uf-grid" style={{ gap: "24px" }}>
-                      <div className="uf-pill-container">
-                        <FuzzyToggleRow label="Does anyone in your family have uveitis?" fieldKey="family_uveitis" />
-                        <FuzzyToggleRow label="Does anyone in your family have autoimmune disease?" fieldKey="family_autoimmune" />
-                        <div className="uf-field-group">
-                          <label className="uf-field-label">What is your age? *</label>
-                          <input
-                            className="uf-input"
-                            type="number"
-                            placeholder="e.g. 34"
-                            min="0"
-                            value={formData.age}
-                            onChange={(e) => updateField("age", e.target.value)}
-                          />
-                        </div>
-
-                        <div className="uf-field-group">
-                          <label className="uf-field-label">What is your sex? *</label>
-                          <select className="uf-select" value={formData.sex} onChange={(e) => updateField("sex", e.target.value)}>
-                            <option value="F">Female</option>
-                            <option value="M">Male</option>
-                            <option value="Unknown">Prefer not to say / Unknown</option>
-                          </select>
-                        </div>
-
-                        <div className="uf-field-group">
-                          <label className="uf-field-label">Do you have any known allergies?</label>
-                          <input
-                            className="uf-input"
-                            type="text"
-                            placeholder="e.g. Penicillin, Pollen, or none"
-                            value={formData.allergies}
-                            onChange={(e) => updateField("allergies", e.target.value)}
-                          />
-                        </div>
-
-                        <FuzzyToggleRow label="Do you smoke or use tobacco products?" fieldKey="smoker" />
-                        {formData.sex === "F" && <FuzzyToggleRow label="Are you pregnant, if applicable?" fieldKey="pregnant" />}
-                        <FuzzyToggleRow label="Have you had any recent major illness or hospitalization?" fieldKey="recent_hospitalization" />
-                      </div>
-
-                      {predictionResult ? (
-                        <>
-                          <div
-                          className="uf-prediction-result card animate-fade-in"
-                          style={{
-                            marginTop: "24px",
-                            padding: "24px",
-                            background: "linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(6, 182, 212, 0.05))",
-                            border: "1px solid rgba(37, 99, 235, 0.15)",
-                            borderRadius: "20px",
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                            <Sparkles size={20} style={{ color: "#2563eb" }} />
-                            <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 800, color: "#0f172a" }}>
-                              Neuro-Fuzzy Model Triage
-                            </h3>
-                          </div>
-
-                          <div
-                            style={{
-                              padding: "12px 16px",
-                              borderRadius: "12px",
-                              background:
-                                predictionResult.clinical_risk === "High"
-                                  ? "rgba(239, 68, 68, 0.08)"
-                                  : predictionResult.clinical_risk === "Moderate"
-                                    ? "rgba(245, 158, 11, 0.08)"
-                                    : "rgba(16, 185, 129, 0.08)",
-                              color:
-                                predictionResult.clinical_risk === "High"
-                                  ? "#b91c1c"
-                                  : predictionResult.clinical_risk === "Moderate"
-                                    ? "#b45309"
-                                    : "#047857",
-                              fontWeight: 800,
-                              fontSize: "0.95rem",
-                              marginBottom: "20px",
-                              border: "1px solid",
-                              borderColor:
-                                predictionResult.clinical_risk === "High"
-                                  ? "rgba(239, 68, 68, 0.16)"
-                                  : predictionResult.clinical_risk === "Moderate"
-                                    ? "rgba(245, 158, 11, 0.16)"
-                                    : "rgba(16, 185, 129, 0.16)",
-                            }}
-                          >
-                            Clinical Safety Tier: {predictionResult.clinical_risk || "Low"} Risk
-                          </div>
-
-                          <div className="uf-summary-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Uveitis Diagnosis Suspicion</span>
-                              <span
-                                className="uf-summary-value"
-                                style={{
-                                  fontSize: "1.35rem",
-                                  fontWeight: 900,
-                                  color: predictionResult.uveitis_yes_no === 1 ? "#dc2626" : "#16a34a",
-                                }}
-                              >
-                                {predictionResult.uveitis_yes_no === 1 ? "Likely Present" : "Unlikely Present"}
-                              </span>
-                            </div>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Uveitis Probability</span>
-                              <span className="uf-summary-value" style={{ fontSize: "1.35rem", fontWeight: 900, color: "#2563eb" }}>
-                                {(Number(predictionResult.uveitis_probability) * 100).toFixed(1)}%
-                              </span>
-                            </div>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Severity Score</span>
-                              <span className="uf-summary-value" style={{ fontSize: "1.2rem", fontWeight: 800, color: "#1e293b" }}>
-                                {Number(predictionResult.severity_score).toFixed(1)}%
-                              </span>
-                            </div>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Severity Class</span>
-                              <span className="uf-summary-value" style={{ fontSize: "1.2rem", fontWeight: 800, color: "#1e293b" }}>
-                                {predictionResult.severity_class}
-                              </span>
-                            </div>
-                          </div>
-
-                          <p style={{ marginTop: "16px", fontSize: "0.82rem", color: "#64748b", lineHeight: 1.5, margin: "16px 0 0" }}>
-                            *Disclaimer: This is an automated preliminary screening prediction generated by the Neuro-Fuzzy expert pipeline. It is intended for clinical training and decision support only. Consult an ophthalmologist immediately for a diagnostic evaluation.
-                          </p>
-                        </div>
-                        <NearbyDoctorsMap />
-                      </>
-                      ) : (
-                        <div className="uf-summary-block">
-                          <h3>Screening Intake Summary</h3>
-                          <div className="uf-summary-grid">
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Affected Eye</span>
-                              <span className="uf-summary-value">{formData.affected_eye.toUpperCase()} Eye</span>
-                            </div>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Symptom Onset</span>
-                              <span className="uf-summary-value">{formData.onset_type.toUpperCase()} onset ({formData.symptom_start_days || "0"} days)</span>
-                            </div>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Severe Redness / Pain</span>
-                              <span className="uf-summary-value">
-                                Redness: {formData.redness_score}/10 | Pain: {formData.pain_score}/10
-                              </span>
-                            </div>
-                            <div className="uf-summary-item">
-                              <span className="uf-summary-label">Systemic &amp; History Flags</span>
-                              <span className="uf-summary-value">
-                                Prior Uveitis: {Number(formData.previous_uveitis) === 1 ? "Yes" : "No"} | Autoimmune: {Number(formData.autoimmune_disease) > 0 ? "Yes" : "No"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  
                 </div>
 
                 <div className="uf-actions">
