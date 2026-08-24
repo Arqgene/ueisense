@@ -1,3 +1,9 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   UVEITIS QUESTIONNAIRE v2 — Complete Stylesheet
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page & Background ──────────────────────────────────────────────────── */
+
 .uf-page {
   min-height: 100vh;
   position: relative;
@@ -36,6 +42,8 @@
   background: radial-gradient(circle, rgba(6, 182, 212, 0.1), transparent 70%);
 }
 
+/* ── Shell & Layout ─────────────────────────────────────────────────────── */
+
 .uf-shell {
   width: min(100%, 1160px);
   padding: 0 20px;
@@ -63,6 +71,8 @@
 .uf-back-home:hover {
   color: #2563eb;
 }
+
+/* ── Top Bar / Header Card ──────────────────────────────────────────────── */
 
 .uf-topbar {
   margin-bottom: 20px;
@@ -122,6 +132,8 @@
   transform: translateY(-1px);
 }
 
+/* ── Progress Bar ───────────────────────────────────────────────────────── */
+
 .uf-progress {
   margin-top: 20px;
 }
@@ -150,6 +162,8 @@
   background: linear-gradient(135deg, #2563eb, #06b6d4);
 }
 
+/* ── Clinical Welcome Banner ────────────────────────────────────────────── */
+
 .uf-clinical-welcome {
   display: flex;
   gap: 16px;
@@ -173,6 +187,8 @@
   color: #334155;
   font-weight: 500;
 }
+
+/* ── Step Card ──────────────────────────────────────────────────────────── */
 
 .uf-card {
   padding: 32px;
@@ -239,6 +255,8 @@
   flex: 1;
 }
 
+/* ── Grid Layouts ───────────────────────────────────────────────────────── */
+
 .uf-grid {
   display: grid;
   gap: 20px;
@@ -255,6 +273,8 @@
   }
 }
 
+/* ── Field Group & Inputs ───────────────────────────────────────────────── */
+
 .uf-field-group {
   display: flex;
   flex-direction: column;
@@ -265,6 +285,13 @@
   font-size: 0.95rem;
   font-weight: 700;
   color: #1e293b;
+}
+
+.uf-question-hint {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.4;
 }
 
 .uf-select,
@@ -289,6 +316,8 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.08);
 }
 
+/* ── Score Slider ───────────────────────────────────────────────────────── */
+
 .uf-score-box {
   background: #f8fafc;
   border: 1px solid rgba(148, 163, 184, 0.16);
@@ -302,19 +331,53 @@
 .uf-score-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .uf-score-text {
   font-size: 1.1rem;
   font-weight: 900;
-  color: #2563eb;
+  flex-shrink: 0;
 }
 
 .uf-range {
   width: 100%;
-  accent-color: #2563eb;
   cursor: pointer;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  outline: none;
+  transition: background 160ms ease;
+}
+
+.uf-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid currentColor;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.uf-range::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+}
+
+.uf-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid currentColor;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .uf-range-scale {
@@ -325,6 +388,8 @@
   font-weight: 700;
   margin-top: -4px;
 }
+
+/* ── Pill / Toggle Rows ─────────────────────────────────────────────────── */
 
 .uf-pill-container {
   display: flex;
@@ -349,6 +414,14 @@
   border-color: rgba(148, 163, 184, 0.22);
 }
 
+.uf-pill-question-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
 .uf-pill-question-text {
   font-size: 0.95rem;
   font-weight: 600;
@@ -356,12 +429,15 @@
   line-height: 1.4;
 }
 
+/* ── Toggle Buttons ─────────────────────────────────────────────────────── */
+
 .uf-toggle-group {
   display: flex;
   background: #f1f5f9;
   padding: 4px;
   border-radius: 999px;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .uf-toggle-btn {
@@ -374,70 +450,121 @@
   border-radius: 999px;
   cursor: pointer;
   transition: all 120ms ease;
+  white-space: nowrap;
 }
 
 .uf-toggle-btn.active {
   background: #fff;
-  color: #2563eb;
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
 }
+
+.uf-toggle-btn.active.uf-toggle-yes {
+  color: #059669;
+}
+
+.uf-toggle-btn.active.uf-toggle-unsure {
+  color: #d97706;
+}
+
+.uf-toggle-btn.active.uf-toggle-no {
+  color: #64748b;
+}
+
+/* ── Conditional Blocks ─────────────────────────────────────────────────── */
 
 .uf-conditional-block {
   padding: 16px;
   border-radius: 16px;
   background: rgba(37, 99, 235, 0.02);
   border: 1px solid rgba(37, 99, 235, 0.08);
-  margin-top: -8px;
-  animation: uf-fade-in 200ms ease;
 }
 
-.uf-summary-block {
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  background: #fff;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.02);
+/* ── Likert Severity Cards ──────────────────────────────────────────────── */
+
+.uf-likert-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.uf-summary-block h3 {
-  margin: 0 0 16px;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.uf-summary-grid {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(2, 1fr);
-}
-
-@media (max-width: 640px) {
-  .uf-summary-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.uf-summary-item {
+.uf-likert-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid rgba(148, 163, 184, 0.16);
+  background: #fff;
+  cursor: pointer;
+  transition: all 160ms ease;
+  flex: 1;
+  min-width: 90px;
 }
 
-.uf-summary-label {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.uf-likert-card:hover {
+  border-color: rgba(148, 163, 184, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
 }
 
-.uf-summary-value {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #1e293b;
-  line-height: 1.45;
+.uf-likert-card.active {
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1);
+  transform: translateY(-2px);
 }
+
+.uf-likert-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.uf-likert-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ── Chip Selectors ─────────────────────────────────────────────────────── */
+
+.uf-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.uf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: #fff;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 140ms ease;
+  white-space: nowrap;
+}
+
+.uf-chip:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.03);
+  color: #2563eb;
+}
+
+.uf-chip.active {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: #2563eb;
+}
+
+/* ── Actions Footer ─────────────────────────────────────────────────────── */
 
 .uf-actions {
   display: flex;
@@ -504,6 +631,8 @@
   box-shadow: 0 14px 30px rgba(37, 99, 235, 0.26);
 }
 
+/* ── Status Badges ──────────────────────────────────────────────────────── */
+
 .uf-status {
   display: inline-flex;
   align-items: center;
@@ -524,6 +653,8 @@
   background: rgba(239, 68, 68, 0.1);
   color: #b91c1c;
 }
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
 
 .spin {
   animation: uf-spin 0.8s linear infinite;
@@ -546,43 +677,8 @@
   }
 }
 
-@media (max-width: 640px) {
-  .uf-page {
-    padding: 16px 0;
-  }
+/* ── Questionnaire Layout (form vs results mode) ────────────────────────── */
 
-  .uf-shell {
-    width: 100%;
-    padding: 0 12px;
-  }
-
-  .uf-top-nav {
-    padding: 0 4px;
-    margin-bottom: 12px;
-  }
-
-  .uf-topbar,
-  .uf-card {
-    padding: 20px 16px;
-  }
-
-  .uf-pill-question-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .uf-toggle-group {
-    width: 100%;
-  }
-
-  .uf-toggle-btn {
-    flex: 1;
-    text-align: center;
-  }
-}
-
-/* Side-by-side dashboard styling */
 .uf-questionnaire-layout {
   display: grid;
   gap: 24px;
@@ -608,6 +704,8 @@
 .uf-main-column {
   min-width: 0;
 }
+
+/* ── Analytics Sidebar ──────────────────────────────────────────────────── */
 
 .uf-sidebar-analytics {
   position: sticky;
@@ -701,11 +799,7 @@
   font-weight: 500;
 }
 
-.uf-pill-question-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+/* ── Legacy Compat ──────────────────────────────────────────────────────── */
 
 .uf-fuzzy-badge {
   font-size: 0.75rem;
@@ -715,4 +809,59 @@
   padding: 2px 6px;
   border-radius: 4px;
   align-self: flex-start;
+}
+
+/* ── Mobile Responsive ──────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .uf-page {
+    padding: 16px 0;
+  }
+
+  .uf-shell {
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .uf-top-nav {
+    padding: 0 4px;
+    margin-bottom: 12px;
+  }
+
+  .uf-topbar,
+  .uf-card {
+    padding: 20px 16px;
+  }
+
+  .uf-pill-question-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .uf-toggle-group {
+    width: 100%;
+  }
+
+  .uf-toggle-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  .uf-likert-group {
+    flex-direction: column;
+  }
+
+  .uf-likert-card {
+    flex-direction: row;
+    min-width: unset;
+  }
+
+  .uf-chip-group {
+    flex-direction: column;
+  }
+
+  .uf-chip {
+    justify-content: center;
+  }
 }
