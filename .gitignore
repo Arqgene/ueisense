@@ -1,33 +1,136 @@
-# Logs
-logs
-*.log
+# ─────────────────────────────────────────────────────────────
+#  UveiSense — .gitignore
+#  React / Vite frontend  +  Python / FastAPI / PyTorch backend
+# ─────────────────────────────────────────────────────────────
+
+# ── Node / npm ────────────────────────────────────────────────
+node_modules/
 npm-debug.log*
 yarn-debug.log*
+yarn-error.log*
 pnpm-debug.log*
+.npm
 
-# Node dependencies
-node_modules
-dist-ssr
-*.local
+# ── Build output ──────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+.vite/
 
-# Database & Uploads runtime storage
+# ── Local env files (NEVER commit secrets) ───────────────────
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# ── Python ────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+.conda/
+*.egg-info/
+dist-info/
+
+# Package / build artefacts
+*.egg
+*.whl
+build/
+sdist/
+wheels/
+MANIFEST
+
+# pytest / testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── ML model artifacts (large binary files — store via DVC/LFS) ──
+backend/artifacts/*.pth
+backend/artifacts/*.pkl
+backend/artifacts/*.joblib
+backend/artifacts/*.h5
+backend/artifacts/*.keras
+backend/artifacts/*.onnx
+# Keep the directory itself
+!backend/artifacts/.gitkeep
+
+# ── Training / experiment output ─────────────────────────────
+backend/runs/
+backend/logs/
+*.tfevents.*
+wandb/
+mlruns/
+
+# ── Large datasets (commit only samples or use DVC) ───────────
+backend/data/*.csv
+backend/data/*.parquet
+backend/data/*.feather
+backend/data/*.hdf5
+backend/data/*.npz
+backend/data/*.npy
+# Keep the directory
+!backend/data/.gitkeep
+
+# ── Server runtime ────────────────────────────────────────────
 server/db/*.db
 server/db/*.db-wal
 server/db/*.db-shm
 server/uploads/*
 !server/uploads/.gitkeep
 
-# Python cache & artifacts
-__pycache__
-*.pyc
-*.pyo
-.pytest_cache
-*.sqlite3
+# ── Logs ──────────────────────────────────────────────────────
+logs/
+*.log
+backend/*.log
 
-# Editor directories and files
+# ── OS artefacts ──────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ──────────────────────────────────────────────
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+!.vscode/settings.json
+.idea/
 *.suo
 *.sln
+*.swp
+*.swo
+*~
+.project
+.classpath
+
+# ── Docker ────────────────────────────────────────────────────
+.dockerignore
+
+# ── Misc ──────────────────────────────────────────────────────
+*.local
+*.bak
+*.tmp
+.cache/

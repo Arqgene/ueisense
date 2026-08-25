@@ -18,6 +18,7 @@ import {
   ClipboardList,
   UserRound,
   AlertCircle,
+  Leaf,
 } from "lucide-react";
 import "../styles/uveitisQuestionnaire.css";
 
@@ -25,7 +26,7 @@ import "../styles/uveitisQuestionnaire.css";
    CONSTANTS
    ══════════════════════════════════════════════════════════════════════════════ */
 
-const DRAFT_KEY = "uveitis_questionnaire_v2_draft";
+const DRAFT_KEY = "uveitis_questionnaire_v3_draft";
 
 const STEPS = [
   {
@@ -62,6 +63,13 @@ const STEPS = [
     subtitle: "Your general health, infections, and medications.",
     tip: "Up to 50% of uveitis cases have an associated systemic condition—capturing these connections is essential.",
     icon: Stethoscope,
+  },
+  {
+    id: "lifestyleExposure",
+    title: "6. Lifestyle & Exposure History",
+    subtitle: "Your daily activities and environmental exposures.",
+    tip: "Occupational hazards, animal contact, and environmental exposures can be relevant risk factors for certain infectious and inflammatory uveitis types.",
+    icon: Leaf,
   },
 ];
 
@@ -101,13 +109,10 @@ const OCULAR_HISTORY_OPTIONS = [
 ];
 
 const VISUAL_PROBLEM_OPTIONS = [
-  "Pain, redness, or light sensitivity",
-  "Floaters or moving spots",
-  "Blurred or reduced vision",
-  "Missing area of vision (blind spot)",
-  "Distorted or wavy vision",
-  "A combination of the above",
-  "Not sure",
+  "Blurred vision",
+  "Decreased vision",
+  "Hazy vision",
+  "Normal vision",
 ];
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -127,9 +132,16 @@ const initialFormState = {
   redness_score: 0,
   photophobia_impact: 0,
   subjective_visual_disturbance: "",
+  // Q6 sub-questions (shown when pain_score > 0)
+  pain_location: "",
+  pain_nature: [],
+  pain_with_movement: "",
 
   // Step 3 — Visual Disturbances
   floaters: "",
+  floater_frequency: "",
+  floater_count: "",
+  floater_appearance: [],
   scotoma: "",
   visual_distortion: "",
   predominant_visual_problem: "",
@@ -139,11 +151,13 @@ const initialFormState = {
   episode_count: "",
   ocular_history: "",
   ocular_history_types: [],
+  contact_lens_use: "",
 
   // Step 5 — Systemic & Medications
   systemic_inflammatory_disease: "",
   systemic_disease_types: [],
   systemic_disease_other_text: "",
+  systemic_disease_duration: "",
   infection_exposure: "",
   infection_types: [],
   cough: "",
@@ -153,6 +167,13 @@ const initialFormState = {
   current_medications: "",
   medication_list: "",
   recent_medication_change: "",
+
+  // Step 6 — Lifestyle & Exposure
+  occupation: "",
+  pet_contact: "",
+  environmental_exposure: "",
+  lifestyle_other_exposure: "",
+  other_systemic_medications: "",
 };
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -213,10 +234,13 @@ function getLiveFuzzyIndices(form) {
   const peripheralH = hedge(peripheral, "very");
 
   const inflammation = (rednessHigh * 0.35 + painHigh * 0.35 + photoHigh * 0.30) * 100;
-  const visual = (blurHigh * 0.30 + floatersH * 0.20 + hazyH * 0.15 + glareH * 0.15 + peripheralH * 0.10 + 0.05 + 0.05) * 100;
+  // Visual Dysfunction — weights match backend visual_impairment_index
+  const visual = (blurHigh * 0.30 + floatersH * 0.20 + hazyH * 0.15 + glareH * 0.20 + peripheralH * 0.15) * 100;
   const autoimmuneRisk = autoimmune * 100;
   const infectiousRisk = Math.max(tuberculosis, syphilis, hiv, recentInfection, tbContact) * 100;
-  const recurrence = (previousUveitis * 0.50 + 0 * 0.25 + 0 * 0.15 + episodeCount * 0.10) * 100;
+  // Recurrence — weights match updated backend recurrence_index
+  const episodeHedged = Math.sqrt(episodeCount); // hedge(episode_norm, "somewhat")
+  const recurrence = (previousUveitis * 0.45 + 0 * 0.25 + (previousUveitis) * 0.15 + episodeHedged * 0.15) * 100;
   const onsetVal = form.onset_type === "Suddenly" || form.onset_type === "Sudden" ? 1.0 : 0.0;
   const urgency = (painHigh * 0.25 + photoHigh * 0.25 + blurHigh * 0.20 + onsetVal * 0.15 + hedge(toFuzzy(form.floaters), "very") * 0.15) * 100;
 
@@ -273,7 +297,7 @@ function buildLegacyPayload(form) {
     eye_trauma: ocularTypes.includes("Trauma / Physical injury") ? 1 : 0,
     eye_surgery: ocularTypes.includes("Eye surgery (Cataract, Glaucoma, Vitrectomy)") ? 1 : 0,
     prior_treatment: ocularTypes.includes("Previous eye disease or condition") ? 1 : 0,
-    contact_lens: 0,
+    contact_lens: form.contact_lens_use === "Yes" ? 1 : 0,
     steroid_eye_drop_use: form.current_medications === "Yes" ? 0.5 : 0,
 
     // Systemic symptoms
@@ -287,7 +311,7 @@ function buildLegacyPayload(form) {
     // Demographics & triage
     age: Number(form.age) || 0,
     sex: form.sex === "Male" ? "M" : form.sex === "Female" ? "F" : "Unknown",
-    affected_eye: form.affected_eye === "Not sure" ? "Both" : form.affected_eye || "Left",
+    affected_eye: form.affected_eye || "Left",
     onset_type: form.onset_type === "Suddenly" ? "Sudden" : form.onset_type === "Gradually" ? "Gradual" : "Sudden",
     symptom_start_days: Number(form.symptom_duration_days) || 0,
 
@@ -313,11 +337,27 @@ function buildLegacyPayload(form) {
     recent_hospitalization: 0,
 
     meta: {
-      source: "uveitis-questionnaire-v2",
+      source: "uveitis-questionnaire-v3",
       predominant_visual_problem: form.predominant_visual_problem || "",
       systemic_disease_types: form.systemic_disease_types || [],
       infection_types: form.infection_types || [],
       ocular_history_types: form.ocular_history_types || [],
+      // Q6 pain details
+      pain_location: form.pain_location || "",
+      pain_nature: form.pain_nature || [],
+      pain_with_movement: form.pain_with_movement || "",
+      // Q10 floater details
+      floater_frequency: form.floater_frequency || "",
+      floater_count: form.floater_count || "",
+      floater_appearance: form.floater_appearance || [],
+      // Systemic duration
+      systemic_disease_duration: form.systemic_disease_duration || "",
+      // Lifestyle & exposure
+      occupation: form.occupation || "",
+      pet_contact: form.pet_contact || "",
+      environmental_exposure: form.environmental_exposure || "",
+      lifestyle_other_exposure: form.lifestyle_other_exposure || "",
+      other_systemic_medications: form.other_systemic_medications || "",
       submittedAt: new Date().toISOString(),
     },
   };
@@ -684,7 +724,6 @@ export default function UveitisQuestionnaire() {
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
-            <option value="Prefer not to say">Prefer not to say</option>
           </select>
         </div>
       </div>
@@ -698,7 +737,6 @@ export default function UveitisQuestionnaire() {
             <option value="Left">Left Eye</option>
             <option value="Right">Right Eye</option>
             <option value="Both">Both Eyes</option>
-            <option value="Not sure">Not sure</option>
           </select>
         </div>
 
@@ -731,7 +769,7 @@ export default function UveitisQuestionnaire() {
 
   const renderStep1 = () => (
     <div className="uf-grid" style={{ gap: 24 }}>
-      {/* Q6: Pain */}
+      {/* Q6: Pain severity */}
       <ScoreSlider
         label="How severe is your eye pain?"
         hint="Rate from no pain (0) to the worst pain imaginable (10)."
@@ -739,6 +777,28 @@ export default function UveitisQuestionnaire() {
         value={formData.pain_score}
         onChange={updateField}
       />
+      {/* Q6 sub-questions — visible when pain > 0 */}
+      <ConditionalBlock show={Number(formData.pain_score) > 0}>
+        <div className="uf-pill-container">
+          <RadioCardSelector
+            label="Where is the pain located?"
+            options={["Around the eye / globe", "Inside the eye", "Associated with headache"]}
+            value={formData.pain_location}
+            onChange={(val) => updateField("pain_location", val)}
+          />
+          <ChipSelector
+            label="How would you describe the nature of the pain? (select all that apply)"
+            options={["Mild", "Moderate", "Severe", "Pricking / Sharp", "Throbbing"]}
+            selected={formData.pain_nature}
+            onChange={(val) => updateField("pain_nature", val)}
+          />
+          <BinaryToggle
+            label="Is the pain made worse by moving your eye?"
+            value={formData.pain_with_movement}
+            onChange={(val) => updateField("pain_with_movement", val)}
+          />
+        </div>
+      </ConditionalBlock>
       {/* Q7: Redness */}
       <ScoreSlider
         label="How noticeable is the redness of your eye?"
@@ -772,8 +832,38 @@ export default function UveitisQuestionnaire() {
         <TriStateToggle
           label="Do you see new floaters, moving spots, or cobweb-like shapes?"
           value={formData.floaters}
-          onChange={(val) => updateField("floaters", val)}
+          onChange={(val) => {
+            updateField("floaters", val);
+            if (val !== "Yes") {
+              updateField("floater_frequency", "");
+              updateField("floater_count", "");
+              updateField("floater_appearance", []);
+            }
+          }}
         />
+        {/* Q10 sub-questions — visible when floaters = Yes */}
+        <ConditionalBlock show={formData.floaters === "Yes"}>
+          <div style={{ display: "grid", gap: 12, paddingTop: 4 }}>
+            <RadioCardSelector
+              label="How often do you notice the floaters?"
+              options={["Always", "Frequently", "Occasionally", "Rarely"]}
+              value={formData.floater_frequency}
+              onChange={(val) => updateField("floater_frequency", val)}
+            />
+            <RadioCardSelector
+              label="How many floaters do you see?"
+              options={["Single floater", "Multiple floaters", "Not sure"]}
+              value={formData.floater_count}
+              onChange={(val) => updateField("floater_count", val)}
+            />
+            <ChipSelector
+              label="What is the appearance of the floater(s)? (select all that apply)"
+              options={["Black / Dark", "Grey", "Coloured", "Thread-like / Cobweb", "Ring-shaped", "Other"]}
+              selected={formData.floater_appearance}
+              onChange={(val) => updateField("floater_appearance", val)}
+            />
+          </div>
+        </ConditionalBlock>
         {/* Q11: Scotoma */}
         <TriStateToggle
           label="Do you notice a dark spot or an area missing from your vision?"
@@ -787,10 +877,10 @@ export default function UveitisQuestionnaire() {
           onChange={(val) => updateField("visual_distortion", val)}
         />
       </div>
-      {/* Q13: Predominant visual problem */}
+      {/* Q13: Vision description */}
       <RadioCardSelector
-        label="Which best describes your main visual problem?"
-        hint="Select the single most bothersome symptom."
+        label="How would you describe your vision?"
+        hint="Select the option that best describes your current visual experience."
         options={VISUAL_PROBLEM_OPTIONS}
         value={formData.predominant_visual_problem}
         onChange={(val) => updateField("predominant_visual_problem", val)}
@@ -801,9 +891,9 @@ export default function UveitisQuestionnaire() {
   const renderStep3 = () => (
     <div className="uf-grid" style={{ gap: 16 }}>
       <div className="uf-pill-container">
-        {/* Q14: Previous uveitis */}
+        {/* Q14: Previous uveitis (combined with episode count cue) */}
         <BinaryToggle
-          label="Have you had uveitis before?"
+          label="Have you had uveitis before? If yes, how many episodes have you experienced?"
           value={formData.previous_uveitis}
           onChange={(val) => {
             updateField("previous_uveitis", val);
@@ -813,7 +903,7 @@ export default function UveitisQuestionnaire() {
         />
         <ConditionalBlock show={formData.previous_uveitis === "Yes"}>
           <div className="uf-field-group">
-            <label className="uf-field-label">How many previous episodes have you had?</label>
+            <label className="uf-field-label">How many episodes in total?</label>
             <input
               className="uf-input"
               type="number"
@@ -842,6 +932,14 @@ export default function UveitisQuestionnaire() {
             onChange={(val) => updateField("ocular_history_types", val)}
           />
         </ConditionalBlock>
+
+        {/* Contact lens usage */}
+        <BinaryToggle
+          label="Do you currently wear or have you previously worn contact lenses?"
+          hint="Contact lens use can be a relevant ocular risk factor."
+          value={formData.contact_lens_use}
+          onChange={(val) => updateField("contact_lens_use", val)}
+        />
       </div>
     </div>
   );
@@ -858,6 +956,7 @@ export default function UveitisQuestionnaire() {
             if (val !== "Yes") {
               updateField("systemic_disease_types", []);
               updateField("systemic_disease_other_text", "");
+              updateField("systemic_disease_duration", "");
             }
           }}
         />
@@ -880,6 +979,22 @@ export default function UveitisQuestionnaire() {
               />
             </div>
           </ConditionalBlock>
+          {/* Q15 sub: duration of condition */}
+          <div className="uf-field-group" style={{ marginTop: 12 }}>
+            <label className="uf-field-label">How long have you had this condition?</label>
+            <select
+              className="uf-select"
+              value={formData.systemic_disease_duration}
+              onChange={(e) => updateField("systemic_disease_duration", e.target.value)}
+            >
+              <option value="" disabled>Select…</option>
+              <option value="Less than 1 year">Less than 1 year</option>
+              <option value="1–5 years">1–5 years</option>
+              <option value="5–10 years">5–10 years</option>
+              <option value="More than 10 years">More than 10 years</option>
+              <option value="Not sure">Not sure</option>
+            </select>
+          </div>
         </ConditionalBlock>
 
         {/* Q16: Infection exposure */}
@@ -959,7 +1074,72 @@ export default function UveitisQuestionnaire() {
     </div>
   );
 
-  const stepRenderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4];
+  /* ════════════════════════════════════════════════════════════════════════════
+     STEP 6 — Lifestyle & Exposure History
+     ════════════════════════════════════════════════════════════════════════════ */
+
+  const renderStep5 = () => (
+    <div className="uf-grid" style={{ gap: 16 }}>
+      <div className="uf-pill-container">
+        {/* Occupation */}
+        <div className="uf-field-group">
+          <label className="uf-field-label">What is your occupation?</label>
+          <span className="uf-question-hint">Certain occupations involve exposure to chemicals, dust, UV light, or biological hazards.</span>
+          <input
+            className="uf-input"
+            type="text"
+            placeholder="e.g. Farmer, Welder, Teacher, Healthcare worker"
+            value={formData.occupation}
+            onChange={(e) => updateField("occupation", e.target.value)}
+          />
+        </div>
+
+        {/* Pet / Animal contact */}
+        <TriStateToggle
+          label="Do you have regular contact with pets or animals?"
+          hint="Includes cats, dogs, birds, reptiles, livestock, or wildlife."
+          value={formData.pet_contact}
+          onChange={(val) => updateField("pet_contact", val)}
+        />
+
+        {/* Environmental exposure */}
+        <TriStateToggle
+          label="Are you exposed to dust, chemicals, smoke, or other environmental hazards?"
+          hint="Includes workplace chemicals, construction dust, agricultural pesticides, or heavy air pollution."
+          value={formData.environmental_exposure}
+          onChange={(val) => updateField("environmental_exposure", val)}
+        />
+
+        {/* Other exposure */}
+        <div className="uf-field-group">
+          <label className="uf-field-label">Any other relevant exposure or lifestyle factor? (optional)</label>
+          <span className="uf-question-hint">e.g. recent foreign travel, outdoor activities, recreational habits.</span>
+          <input
+            className="uf-input"
+            type="text"
+            placeholder="Describe any other relevant exposure…"
+            value={formData.lifestyle_other_exposure}
+            onChange={(e) => updateField("lifestyle_other_exposure", e.target.value)}
+          />
+        </div>
+
+        {/* Additional systemic / ocular medications */}
+        <div className="uf-field-group">
+          <label className="uf-field-label">Are you taking any additional drugs, treatments, or medications for other systemic or eye conditions?</label>
+          <span className="uf-question-hint">Please list any medications not already mentioned, including over-the-counter drugs or supplements.</span>
+          <input
+            className="uf-input"
+            type="text"
+            placeholder="e.g. Methotrexate, Latanoprost, Vitamin D, Omega-3…"
+            value={formData.other_systemic_medications}
+            onChange={(e) => updateField("other_systemic_medications", e.target.value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const stepRenderers = [renderStep0, renderStep1, renderStep2, renderStep3, renderStep4, renderStep5];
 
   /* ════════════════════════════════════════════════════════════════════════════
      ANALYTICS SIDEBAR (rendered post-submission)
@@ -1071,7 +1251,7 @@ export default function UveitisQuestionnaire() {
           </div>
           <div>
             <p>
-              This intake uses a clinically validated questionnaire to estimate screening risk before imaging. Your answers are autosaved securely in your browser.
+              <strong>Phase 1 — Screening &amp; Symptom Assessment.</strong> This questionnaire collects patient history, symptoms, systemic health, medication history, and relevant risk factors. It may help identify or raise suspicion of possible inflammatory conditions, but it is <strong>not intended to diagnose or classify the type of uveitis</strong>. Your answers are autosaved securely in your browser.
             </p>
           </div>
         </div>
