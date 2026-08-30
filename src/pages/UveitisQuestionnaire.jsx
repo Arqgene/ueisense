@@ -81,6 +81,28 @@ const LIKERT_OPTIONS = [
   { label: "Very severe", value: "Very severe", color: "#ef4444" },
 ];
 
+const PAIN_SCORING_CRITERIA = {
+  "None (0)": "No eye pain at all",
+  "Mild (1-3)": "Slight discomfort, not interfering with daily activities",
+  "Moderate (4-6)": "Noticeable pain, some interference with daily activities",
+  "Severe (7-8)": "Significant pain, considerable interference with activities",
+  "Very Severe (9-10)": "Unbearable pain, unable to function normally"
+};
+
+const REDNESS_SCORING_CRITERIA = {
+  "None (0)": "Eye appears completely white and normal",
+  "Mild (1-3)": "Slight pinkish discoloration, visible but not prominent",
+  "Moderate (4-6)": "Noticeable red/pink coloring, clearly visible",
+  "Severe (7-8)": "Significantly red/bloodshot, prominent redness",
+  "Very Severe (9-10)": "Extremely red and swollen appearance, markedly bloodshot"
+};
+
+const UVEITIS_TYPE_OPTIONS = [
+  "Anterior uveitis",
+  "Intermediate uveitis",
+  "Posterior uveitis"
+];
+
 const SYSTEMIC_DISEASE_OPTIONS = [
   "Ankylosing Spondylitis / HLA-B27",
   "Rheumatoid Arthritis",
@@ -149,6 +171,8 @@ const initialFormState = {
   // Step 4 — Eye History
   previous_uveitis: "",
   episode_count: "",
+  uveitis_type: "",
+  recent_episode_timing: "",
   ocular_history: "",
   ocular_history_types: [],
   contact_lens_use: "",
@@ -164,6 +188,7 @@ const initialFormState = {
   weight_loss: "",
   joint_pain: "",
   immunocompromised: "",
+  immunosuppressive_medication_name: "",
   current_medications: "",
   medication_list: "",
   recent_medication_change: "",
@@ -352,6 +377,11 @@ function buildLegacyPayload(form) {
       floater_appearance: form.floater_appearance || [],
       // Systemic duration
       systemic_disease_duration: form.systemic_disease_duration || "",
+      // Uveitis history
+      uveitis_type: form.uveitis_type || "",
+      recent_episode_timing: form.recent_episode_timing || "",
+      // Immunosuppressive medication
+      immunosuppressive_medication_name: form.immunosuppressive_medication_name || "",
       // Lifestyle & exposure
       occupation: form.occupation || "",
       pet_contact: form.pet_contact || "",
@@ -377,6 +407,114 @@ function validateForm(form) {
     errors.push("Please enter a valid symptom duration in days.");
   if (!form.onset_type) errors.push("Please select whether symptoms began suddenly or gradually.");
   return errors;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   STEP COMPLETION VALIDATION
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+function isStepComplete(form, stepIndex) {
+  switch (stepIndex) {
+    // Step 0 — Demographics
+    case 0:
+      return (
+        form.age &&
+        !isNaN(form.age) &&
+        Number(form.age) >= 0 &&
+        Number(form.age) <= 130 &&
+        form.sex &&
+        form.affected_eye &&
+        form.symptom_duration_days !== "" &&
+        !isNaN(form.symptom_duration_days) &&
+        Number(form.symptom_duration_days) >= 0 &&
+        form.onset_type
+      );
+
+    // Step 1 — Primary Eye Symptoms
+    case 1: {
+      const hasPainDetails = Number(form.pain_score) > 0 
+        ? form.pain_location && form.pain_nature.length > 0 && form.pain_with_movement
+        : true;
+      return (
+        form.pain_score !== "" &&
+        form.redness_score !== "" &&
+        form.photophobia_impact !== "" &&
+        form.subjective_visual_disturbance &&
+        hasPainDetails
+      );
+    }
+
+    // Step 2 — Visual Disturbances
+    case 2: {
+      const hasFloaterDetails = form.floaters === "Yes"
+        ? form.floater_frequency && form.floater_count && form.floater_appearance.length > 0
+        : true;
+      return (
+        form.floaters &&
+        form.scotoma &&
+        form.visual_distortion &&
+        form.predominant_visual_problem &&
+        hasFloaterDetails
+      );
+    }
+
+    // Step 3 — Eye History
+    case 3: {
+      const hasPreviousUveitisDetails = form.previous_uveitis === "Yes"
+        ? form.episode_count && form.uveitis_type && form.recent_episode_timing
+        : true;
+      const hasOcularHistoryDetails = form.ocular_history === "Yes"
+        ? form.ocular_history_types.length > 0
+        : true;
+      return (
+        form.previous_uveitis &&
+        form.ocular_history &&
+        form.contact_lens_use &&
+        hasPreviousUveitisDetails &&
+        hasOcularHistoryDetails
+      );
+    }
+
+    // Step 4 — Systemic Health & Medications
+    case 4: {
+      const hasSystolicDiseaseDetails = form.systemic_inflammatory_disease === "Yes"
+        ? form.systemic_disease_types.length > 0 && form.systemic_disease_duration
+        : true;
+      const hasInfectionDetails = form.infection_exposure === "Yes"
+        ? form.infection_types.length > 0
+        : true;
+      const hasImmuneSuppressants = form.immunocompromised === "Yes"
+        ? form.immunosuppressive_medication_name
+        : true;
+      const hasMedicationDetails = form.current_medications === "Yes"
+        ? form.medication_list && form.recent_medication_change
+        : true;
+      return (
+        form.systemic_inflammatory_disease &&
+        form.infection_exposure &&
+        form.cough &&
+        form.weight_loss &&
+        form.joint_pain &&
+        form.immunocompromised &&
+        hasSystolicDiseaseDetails &&
+        hasInfectionDetails &&
+        hasImmuneSuppressants &&
+        hasMedicationDetails
+      );
+    }
+
+    // Step 5 — Lifestyle & Exposure
+    case 5:
+      return (
+        form.occupation &&
+        form.pet_contact &&
+        form.environmental_exposure &&
+        form.other_systemic_medications !== undefined
+      );
+
+    default:
+      return true;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -585,6 +723,7 @@ export default function UveitisQuestionnaire() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitState, setSubmitState] = useState({ status: "idle", message: "" });
   const [predictionResult, setPredictionResult] = useState(null);
+  const [validationErrors, setValidationErrors] = useState([]);
 
   // ── Draft hydration & auto-save ──
   useEffect(() => {
@@ -620,14 +759,27 @@ export default function UveitisQuestionnaire() {
   const updateField = (key, value) => setFormData((prev) => ({ ...prev, [key]: value }));
 
   // ── Navigation ──
-  const nextStep = () => { setDirection(1); setStepIndex((i) => Math.min(STEPS.length - 1, i + 1)); };
-  const prevStep = () => { setDirection(-1); setStepIndex((i) => Math.max(0, i - 1)); };
+  const nextStep = () => {
+    if (!isStepComplete(formData, stepIndex)) {
+      setValidationErrors(["Please complete all questions on this page before proceeding to the next section."]);
+      return;
+    }
+    setValidationErrors([]);
+    setDirection(1);
+    setStepIndex((i) => Math.min(STEPS.length - 1, i + 1));
+  };
+  const prevStep = () => {
+    setValidationErrors([]);
+    setDirection(-1);
+    setStepIndex((i) => Math.max(0, i - 1));
+  };
 
   const resetDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
     setFormData(initialFormState);
     setStepIndex(0);
     setDirection(1);
+    setValidationErrors([]);
     setSubmitState({ status: "idle", message: "" });
     setPredictionResult(null);
   };
@@ -706,14 +858,38 @@ export default function UveitisQuestionnaire() {
         <div className="uf-field-group">
           <label className="uf-field-label">What is your age? *</label>
           <input
-            className="uf-input"
-            type="number"
-            placeholder="e.g. 42"
-            min="0"
-            max="130"
-            value={formData.age}
-            onChange={(e) => updateField("age", e.target.value)}
-          />
+      className="uf-input"
+      type="number"
+      placeholder="e.g. 42"
+      min="0"
+      max="130"
+      value={formData.age}
+      onChange={(e) => {
+        const age = Number(e.target.value);
+
+        let ageScore = 0;
+
+        if (age < 12 || age > 60) {
+          ageScore = 2;
+        } else if (age >= 40 && age <= 60) {
+          ageScore = 1.5;
+        } else if (age >= 12 && age < 40) {
+          ageScore = 1;
+        }
+
+        updateField("age", e.target.value);
+        updateField("ageScore", ageScore);
+      }}
+    />
+    <small className="uf-field-hint">
+      Age Risk Weightage:
+      <br />
+      • Below 12 or above 60 years – 2 points
+      <br />
+      • 40–60 years – 1.5 points
+      <br />
+      • 12–40 years – 1 point
+    </small>
         </div>
 
         {/* Q2: Sex */}
@@ -770,13 +946,23 @@ export default function UveitisQuestionnaire() {
   const renderStep1 = () => (
     <div className="uf-grid" style={{ gap: 24 }}>
       {/* Q6: Pain severity */}
-      <ScoreSlider
-        label="How severe is your eye pain?"
-        hint="Rate from no pain (0) to the worst pain imaginable (10)."
-        fieldKey="pain_score"
-        value={formData.pain_score}
-        onChange={updateField}
-      />
+      <div>
+        <ScoreSlider
+          label="How severe is your eye pain?"
+          hint="Rate from no pain (0) to the worst pain imaginable (10)."
+          fieldKey="pain_score"
+          value={formData.pain_score}
+          onChange={updateField}
+        />
+        <div className="uf-scoring-criteria" style={{ marginTop: 12, padding: 12, backgroundColor: "#f3f4f6", borderRadius: 8, fontSize: 13 }}>
+          <strong>Scoring Guide for Eye Pain:</strong>
+          <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+            {Object.entries(PAIN_SCORING_CRITERIA).map(([score, desc]) => (
+              <li key={score}><strong>{score}:</strong> {desc}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
       {/* Q6 sub-questions — visible when pain > 0 */}
       <ConditionalBlock show={Number(formData.pain_score) > 0}>
         <div className="uf-pill-container">
@@ -800,13 +986,23 @@ export default function UveitisQuestionnaire() {
         </div>
       </ConditionalBlock>
       {/* Q7: Redness */}
-      <ScoreSlider
-        label="How noticeable is the redness of your eye?"
-        hint="Rate from no redness (0) to extremely red/bloodshot (10)."
-        fieldKey="redness_score"
-        value={formData.redness_score}
-        onChange={updateField}
-      />
+      <div>
+        <ScoreSlider
+          label="How noticeable is the redness of your eye?"
+          hint="Rate from no redness (0) to extremely red/bloodshot (10)."
+          fieldKey="redness_score"
+          value={formData.redness_score}
+          onChange={updateField}
+        />
+        <div className="uf-scoring-criteria" style={{ marginTop: 12, padding: 12, backgroundColor: "#f3f4f6", borderRadius: 8, fontSize: 13 }}>
+          <strong>Grading & Scoring Criteria for Redness:</strong>
+          <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: 20 }}>
+            {Object.entries(REDNESS_SCORING_CRITERIA).map(([score, desc]) => (
+              <li key={score}><strong>{score}:</strong> {desc}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
       {/* Q8: Photophobia */}
       <ScoreSlider
         label="How much does light bother your affected eye(s)?"
@@ -858,7 +1054,7 @@ export default function UveitisQuestionnaire() {
             />
             <ChipSelector
               label="What is the appearance of the floater(s)? (select all that apply)"
-              options={["Black / Dark", "Grey", "Coloured", "Thread-like / Cobweb", "Ring-shaped", "Other"]}
+              options={["Black / Dark", "Coloured", "Thread-like / Cobweb", "Ring-shaped", "Dot-shaped", "Other"]}
               selected={formData.floater_appearance}
               onChange={(val) => updateField("floater_appearance", val)}
             />
@@ -897,21 +1093,56 @@ export default function UveitisQuestionnaire() {
           value={formData.previous_uveitis}
           onChange={(val) => {
             updateField("previous_uveitis", val);
-            if (val === "No") updateField("episode_count", "");
+            if (val === "No") {
+              updateField("episode_count", "");
+              updateField("uveitis_type", "");
+              updateField("recent_episode_timing", "");
+            }
             if (val === "Yes" && (!formData.episode_count || formData.episode_count === "")) updateField("episode_count", "1");
           }}
         />
         <ConditionalBlock show={formData.previous_uveitis === "Yes"}>
-          <div className="uf-field-group">
-            <label className="uf-field-label">How many episodes in total?</label>
-            <input
-              className="uf-input"
-              type="number"
-              placeholder="e.g. 2"
-              min="1"
-              value={formData.episode_count}
-              onChange={(e) => updateField("episode_count", e.target.value)}
-            />
+          <div className="uf-grid" style={{ gap: 12 }}>
+            <div className="uf-field-group">
+              <label className="uf-field-label">How many episodes in total?</label>
+              <input
+                className="uf-input"
+                type="number"
+                placeholder="e.g. 2"
+                min="1"
+                value={formData.episode_count}
+                onChange={(e) => updateField("episode_count", e.target.value)}
+              />
+            </div>
+            <div className="uf-field-group">
+              <label className="uf-field-label">What type of uveitis did you experience?</label>
+              <select
+                className="uf-select"
+                value={formData.uveitis_type}
+                onChange={(e) => updateField("uveitis_type", e.target.value)}
+              >
+                <option value="" disabled>Select…</option>
+                {UVEITIS_TYPE_OPTIONS.map((opt) => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            </div>
+            <div className="uf-field-group">
+              <label className="uf-field-label">When was your most recent uveitis episode?</label>
+              <select
+                className="uf-select"
+                value={formData.recent_episode_timing}
+                onChange={(e) => updateField("recent_episode_timing", e.target.value)}
+              >
+                <option value="" disabled>Select…</option>
+                <option value="Less than 1 month ago">Less than 1 month ago</option>
+                <option value="1-3 months ago">1-3 months ago</option>
+                <option value="3-6 months ago">3-6 months ago</option>
+                <option value="6-12 months ago">6-12 months ago</option>
+                <option value="More than 1 year ago">More than 1 year ago</option>
+                <option value="Not sure">Not sure</option>
+              </select>
+            </div>
           </div>
         </ConditionalBlock>
 
@@ -1037,8 +1268,24 @@ export default function UveitisQuestionnaire() {
         <TriStateToggle
           label="Are you immunocompromised or taking immune-suppressing medicines?"
           value={formData.immunocompromised}
-          onChange={(val) => updateField("immunocompromised", val)}
+          onChange={(val) => {
+            updateField("immunocompromised", val);
+            if (val !== "Yes") updateField("immunosuppressive_medication_name", "");
+          }}
         />
+        <ConditionalBlock show={formData.immunocompromised === "Yes"}>
+          <div className="uf-field-group">
+            <label className="uf-field-label">What is the name of the immunosuppressive medication?</label>
+            <span className="uf-question-hint">Please list the current or previously used immunosuppressive medication(s) (e.g., Methotrexate, Azathioprine, Mycophenolate, Biologics).</span>
+            <input
+              className="uf-input"
+              type="text"
+              placeholder="e.g. Methotrexate, Azathioprine, Infliximab"
+              value={formData.immunosuppressive_medication_name}
+              onChange={(e) => updateField("immunosuppressive_medication_name", e.target.value)}
+            />
+          </div>
+        </ConditionalBlock>
         {/* Q22: Medications */}
         <BinaryToggle
           label="Are you currently taking any medications or eye drops?"
@@ -1097,7 +1344,7 @@ export default function UveitisQuestionnaire() {
         {/* Pet / Animal contact */}
         <TriStateToggle
           label="Do you have regular contact with pets or animals?"
-          hint="Includes cats, dogs, birds, reptiles, livestock, or wildlife."
+          hint="Includes cats, dogs, birds, or other common household pets."
           value={formData.pet_contact}
           onChange={(val) => updateField("pet_contact", val)}
         />
@@ -1112,12 +1359,12 @@ export default function UveitisQuestionnaire() {
 
         {/* Other exposure */}
         <div className="uf-field-group">
-          <label className="uf-field-label">Any other relevant exposure or lifestyle factor? (optional)</label>
-          <span className="uf-question-hint">e.g. recent foreign travel, outdoor activities, recreational habits.</span>
+          <label className="uf-field-label">Any other relevant exposure or lifestyle factor from the last 6 months? (optional)</label>
+          <span className="uf-question-hint">e.g. recent foreign travel, outdoor activities, recreational habits, seasonal activities during the past 6 months.</span>
           <input
             className="uf-input"
             type="text"
-            placeholder="Describe any other relevant exposure…"
+            placeholder="Describe any other relevant exposure from the last 6 months…"
             value={formData.lifestyle_other_exposure}
             onChange={(e) => updateField("lifestyle_other_exposure", e.target.value)}
           />
@@ -1286,6 +1533,16 @@ export default function UveitisQuestionnaire() {
                 )}
 
                 <div className="uf-card-body">
+                  {validationErrors.length > 0 && (
+                    <div className="uf-validation-error" style={{ marginBottom: 16, padding: 12, backgroundColor: "#fee2e2", border: "1px solid #fecaca", borderRadius: 8, color: "#991b1b", fontSize: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                      <div>
+                        {validationErrors.map((err, idx) => (
+                          <div key={idx}>{err}</div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {stepRenderers[stepIndex]()}
                 </div>
 
@@ -1310,7 +1567,7 @@ export default function UveitisQuestionnaire() {
                         )}
                         {submitState.status === "error" && <div className="uf-status error">{submitState.message}</div>}
                         {stepIndex < STEPS.length - 1 ? (
-                          <button type="button" className="uf-btn uf-btn-primary" onClick={nextStep}>
+                          <button type="button" className="uf-btn uf-btn-primary" onClick={nextStep} disabled={!isStepComplete(formData, stepIndex)}>
                             Next Section
                             <ChevronRight size={18} />
                           </button>
