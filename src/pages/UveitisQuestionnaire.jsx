@@ -509,6 +509,7 @@ function isStepComplete(form, stepIndex) {
         form.occupation &&
         form.pet_contact &&
         form.environmental_exposure &&
+        form.other_systemic_medications !== "" &&
         form.other_systemic_medications !== undefined
       );
 
@@ -786,6 +787,13 @@ export default function UveitisQuestionnaire() {
 
   // ── Submit ──
   const handleSubmit = async () => {
+    if (!isStepComplete(formData, STEPS.length - 1)) {
+      setValidationErrors(["Please complete all questions in the final section before submitting the clinical intake."]);
+      setStepIndex(STEPS.length - 1);
+      return;
+    }
+
+    setValidationErrors([]);
     setIsSubmitting(true);
     setSubmitState({ status: "idle", message: "" });
     setPredictionResult(null);
@@ -937,7 +945,7 @@ export default function UveitisQuestionnaire() {
           <option value="" disabled>Select…</option>
           <option value="Suddenly">Suddenly (over a few hours/days)</option>
           <option value="Gradually">Gradually (over weeks)</option>
-          <option value="Not sure">Not sure</option>
+          
         </select>
       </div>
     </div>
@@ -1572,7 +1580,12 @@ export default function UveitisQuestionnaire() {
                             <ChevronRight size={18} />
                           </button>
                         ) : (
-                          <button type="button" className="uf-btn uf-btn-primary" onClick={handleSubmit} disabled={isSubmitting}>
+                          <button
+                            type="button"
+                            className="uf-btn uf-btn-primary"
+                            onClick={handleSubmit}
+                            disabled={isSubmitting || !isStepComplete(formData, stepIndex)}
+                          >
                             {isSubmitting ? (
                               <>
                                 <Loader2 size={18} className="spin" />
