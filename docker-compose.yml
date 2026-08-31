@@ -5,19 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: uveitis_system
+    container_name: uveitis_frontend
     ports:
       - "80:80"
-      - "3001:80"
-      - "8000:8000"
-    environment:
-      - PORT=80
-      - PYTHON_BACKEND_URL=http://127.0.0.1:8000/predict
-    volumes:
-      - sqlite_data:/app/server/db
-      - uploads_data:/app/server/uploads
+      - "5173:80"
     restart: always
-
-volumes:
-  sqlite_data:
-  uploads_data:

@@ -1,11 +1,8 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Starting Python PyTorch FastAPI Backend..."
-python3 backend/server.py &
+echo "🚀 Building Uveitis AI Diagnosis System Frontend..."
+npm run build
 
-# Wait for Python backend to initialize
-sleep 3
-
-echo "🚀 Starting Node Express Database API & Web Host on Port 80..."
-exec node server/index.js
+echo "✨ Starting Local Production Preview Server..."
+npx serve -s dist -l 80

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { finalReviewApi } from "../api/client.js";
+import { finalReviewApi, patientsApi } from "../api/client.js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -111,12 +111,20 @@ export default function DoctorFinalReview() {
   const { patientId } = useParams();
   const navigate = useNavigate();
 
-  const patient = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
+  const [activePatient, setActivePatient] = useState(() => samplePatients.find((p) => p.id === patientId) || samplePatients[0]);
+
+  useEffect(() => {
+    patientsApi.get(patientId).then((p) => {
+      if (p) setActivePatient(p);
+    }).catch(() => {});
+  }, [patientId]);
+
+  const patient = activePatient;
   const qData = questionnaireModelData[patient.id] || questionnaireModelData.default;
   const cnnData = presetSamples[0].cnnResult;
 
-  const isHigh = patient.riskTier === "High";
-  const isMod = patient.riskTier === "Moderate";
+  const isHigh = (patient.riskTier || patient.risk_tier) === "High";
+  const isMod = (patient.riskTier || patient.risk_tier) === "Moderate";
   const riskColor = isHigh ? "#dc2626" : isMod ? "#d97706" : "#059669";
 
   const [revealed, setRevealed] = useState(false);

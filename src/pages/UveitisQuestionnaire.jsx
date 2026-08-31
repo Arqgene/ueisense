@@ -20,6 +20,7 @@ import {
   AlertCircle,
   Leaf,
 } from "lucide-react";
+import { patientsApi, questionnaireApi, neuroFuzzyApi } from "../api/client.js";
 import "../styles/uveitisQuestionnaire.css";
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -808,29 +809,19 @@ export default function UveitisQuestionnaire() {
     const payload = buildLegacyPayload(formData);
 
     try {
-      const res = await fetch("/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error(`Server returned status ${res.status}`);
-      const result = await res.json();
-      setPredictionResult(result);
-      setSubmitState({ status: "success", message: "Patient intake processed. Adaptive Neuro-Fuzzy analytics loaded." });
-      localStorage.removeItem(DRAFT_KEY);
-    } catch (error) {
-      console.warn("Prediction endpoint call failed, using client rule assessment fallback:", error);
       const probDecimal = Math.max(0.0, Math.min(1.0, liveIndices.urgency / 100.0));
       const forceReferral = liveIndices.urgency >= 70 || (liveIndices.inflammation >= 70 && liveIndices.visual >= 70);
       const uveitisYesNo = probDecimal >= 0.5 || forceReferral ? 1 : 0;
       const calculatedSeverity = 0.35 * liveIndices.inflammation + 0.30 * liveIndices.visual + 0.20 * liveIndices.urgency + 0.10 * liveIndices.recurrence + 0.05 * liveIndices.autoimmune;
+      const severityClass = calculatedSeverity >= 65 ? "Severe Acute Uveitis" : calculatedSeverity >= 35 ? "Moderate Uveitis" : "Mild ocular irritation";
+      const clinicalRisk = uveitisYesNo === 1 ? "High" : probDecimal >= 0.35 || calculatedSeverity >= 35 ? "Moderate" : "Low";
 
-      setPredictionResult({
+      const res = {
         uveitis_probability: probDecimal,
         uveitis_yes_no: uveitisYesNo,
         severity_score: calculatedSeverity,
-        severity_class: calculatedSeverity >= 65 ? "Severe" : calculatedSeverity >= 35 ? "Moderate" : "Mild",
-        clinical_risk: uveitisYesNo === 1 ? "High" : probDecimal >= 0.35 || calculatedSeverity >= 35 ? "Moderate" : "Low",
+        severity_class: severityClass,
+        clinical_risk: clinicalRisk,
         fuzzy_indices: {
           inflammation: liveIndices.inflammation / 100,
           visual: liveIndices.visual / 100,
@@ -847,9 +838,45 @@ export default function UveitisQuestionnaire() {
           liveIndices.inflammation > 50 ? "Significant localized clinical inflammation scores." : "Mild inflammatory values.",
           formData.previous_uveitis === "Yes" ? "Ocular history indicates recurrence risk profiles." : "First-time clinical screening profile.",
         ],
+      };
+
+      setPredictionResult(res);
+
+      // Persist newly created patient to client database
+      const newPatient = await patientsApi.create({
+        name: formData.name || "Patient Intake",
+        age: parseInt(formData.age, 10) || 35,
+        sex: formData.sex || "Female",
+        affected_eye: formData.affected_eye || "Left Eye",
+        symptom_start: `${formData.symptom_start_days || 2} days ago`,
+        onset_type: formData.onset_type || "Sudden",
+        risk_tier: clinicalRisk,
+        uveitis_prob: parseFloat((probDecimal * 100).toFixed(1)),
+        urgency_index: Math.round(liveIndices.urgency),
+        severity_class: severityClass,
+        rednessScore: parseInt(formData.redness_score, 10) || 5,
+        painScore: parseInt(formData.pain_score, 10) || 5,
+        photophobiaScore: parseInt(formData.photophobia_score, 10) || 5,
+        blurredScore: parseInt(formData.blurred_vision_score, 10) || 4,
+        autoimmuneFlag: formData.autoimmune_disease === "Yes",
+        priorUveitis: formData.previous_uveitis === "Yes",
+        slitlamp_status: "Awaiting Photo",
+        primarySymptoms: [
+          formData.onset_type ? `${formData.onset_type} Onset` : "Acute Symptoms",
+          `Pain ${formData.pain_score || 5}/10`,
+          `Photophobia ${formData.photophobia_score || 5}/10`,
+        ],
       });
-      setSubmitState({ status: "success", message: "Intake complete. (Displaying local simulation fallback prediction)" });
+
+      // Save Q&A and neuro-fuzzy results
+      await questionnaireApi.save(newPatient.id, "all", formData);
+      await neuroFuzzyApi.save({ patient_id: newPatient.id, ...res });
+
+      setSubmitState({ status: "success", message: `Patient intake processed. Record ${newPatient.id} created.` });
       localStorage.removeItem(DRAFT_KEY);
+    } catch (error) {
+      console.error("Intake processing error:", error);
+      setSubmitState({ status: "error", message: "Failed to process intake." });
     } finally {
       setIsSubmitting(false);
     }

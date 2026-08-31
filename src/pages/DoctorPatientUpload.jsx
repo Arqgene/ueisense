@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { imagingApi } from "../api/client.js";
+import { imagingApi, patientsApi } from "../api/client.js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -78,7 +78,15 @@ export default function DoctorImagingUpload() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const patient = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
+  const [activePatient, setActivePatient] = useState(() => samplePatients.find((p) => p.id === patientId) || samplePatients[0]);
+
+  useEffect(() => {
+    patientsApi.get(patientId).then((p) => {
+      if (p) setActivePatient(p);
+    }).catch(() => {});
+  }, [patientId]);
+
+  const patient = activePatient;
 
   const [selectedSample, setSelectedSample] = useState(presetSamples[0]);
   const [customImage, setCustomImage] = useState(null);

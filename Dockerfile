@@ -1,39 +1,32 @@
-# Single-Stage Ultra-Lightweight Production Runtime
-FROM python:3.10-slim
-
-# Install Node.js 20 & minimal system tools for C++ native sqlite build
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    sqlite3 \
-    build-essential \
-    python3-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+# Stage 1: Build React static bundle
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install Python requirements (CPU PyTorch)
-COPY backend/requirements.txt ./backend/requirements.txt
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple && \
-    pip install --no-cache-dir -r backend/requirements.txt
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm ci
 
-# Install Node server production dependencies
-COPY server/package.json ./server/package.json
-RUN cd server && npm install --omit=dev && npm cache clean --force
+# Copy source code and build production assets
+COPY . .
+RUN npm run build
 
-# Copy pre-built dist static assets and application code
-COPY dist ./dist
-COPY backend ./backend
-COPY server ./server
-COPY start.sh ./start.sh
+# Stage 2: Serve static files with lightweight Nginx web server
+FROM nginx:alpine
 
-# Environment & Execution setup
-ENV PORT=80
-ENV PYTHON_BACKEND_URL=http://127.0.0.1:8000/predict
+# Copy built assets to Nginx html directory
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 80 3001 8000
-RUN sed -i 's/\r$//' ./start.sh && chmod +x ./start.sh
+# Custom nginx configuration for React Router SPA history fallback
+RUN echo 'server { \
+    listen 80; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html index.htm; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-CMD ["./start.sh"]
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
