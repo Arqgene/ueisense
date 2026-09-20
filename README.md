@@ -1,39 +1,20 @@
-# 👁️ Uveitis AI Diagnosis & Clinical Decision Support System
+# React + Vite
 
-An advanced 7-layer Clinical Decision Support System (CDSS) for ocular inflammatory disease screening, Adaptive Neuro-Fuzzy risk categorization, slitlamp imaging analysis, and consensus-driven treatment plan generation.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
----
+Currently, two official plugins are available:
 
-## 🌟 Key Features
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- **Layer 1**: Patient Intake Questionnaire & Demographics Profiling
-- **Layer 2**: Adaptive Neuro-Fuzzy Risk & Severity Calculation Engine
-- **Layer 3**: Automated Specialist Referral & Proximity Mapping
-- **Layer 4**: Doctor Preliminary Assessment & AI Agreement Tracking
-- **Layer 5**: Slitlamp Image Preprocessing & Anterior Chamber Detection
-- **Layer 6**: Sealed CNN Findings Unlocking & Disclosure Engine
-- **Layer 7**: Multi-Layer Consensus Scoring & Treatment Plan Validation
+## React Compiler
 
----
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 🚀 Quick Start (Local Development)
+## Expanding the ESLint configuration
 
-```bash
-# 1. Install dependencies
-npm install
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+# Uveitis_prediction-detection
+"# ueisense" 
+"# ueisense" 
 
-# 2. Start local development server
-npm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser.
-
----
-
-## 🐳 VM Deployment (1 Command)
-
-```bash
-docker compose up -d --build
-```
-
-For complete VM deployment details, see [DEPLOYMENT.md](file:///c:/Users/kumar/smap/ueisense/DEPLOYMENT.md).

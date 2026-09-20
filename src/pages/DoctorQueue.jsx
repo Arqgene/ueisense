@@ -19,8 +19,9 @@ import {
   Sparkles,
   ArrowUpRight,
 } from "lucide-react";
-import Navbar from "../components/Navbar.jsx";
+import DoctorNavbar from "../components/DoctorNavbar.jsx";
 import Footer from "../components/Footer.jsx";
+import { formatPercent, normalizePatient } from "../utils/formatters.js";
 import "../styles/doctor.css";
 
 export const samplePatients = [
@@ -169,23 +170,7 @@ export default function DoctorQueue() {
   useEffect(() => {
     patientsApi.list()
       .then((rows) => {
-        // Normalize DB rows to match samplePatients shape
-        setDbPatients(rows.map((r) => ({
-          id: r.id,
-          name: r.name,
-          age: r.age,
-          sex: r.sex,
-          affectedEye: r.affectedEye || r.affected_eye,
-          symptomStart: r.symptomStart || r.symptom_start,
-          onset: r.onset || r.onset_type,
-          riskTier: r.riskTier || r.risk_tier,
-          uveitisProbability: r.uveitisProbability || r.uveitis_prob,
-          urgencyIndex: r.urgencyIndex || r.urgency_index,
-          severityClass: r.severityClass || r.severity_class,
-          slitlampStatus: r.slitlampStatus || r.slitlamp_status,
-          submittedAt: r.submittedAt || (r.submitted_at ? new Date(r.submitted_at).toLocaleTimeString() : "—"),
-          primarySymptoms: r.primarySymptoms || ["Acute Ocular Intake"],
-        })));
+        setDbPatients(rows.map(normalizePatient));
       })
       .catch(() => setDbPatients(null)); // server offline → use local data
 
@@ -215,7 +200,7 @@ export default function DoctorQueue() {
 
   return (
     <div className="doctor-page-wrapper">
-      <Navbar />
+      <DoctorNavbar />
       <div className="container" style={{ paddingTop: "110px", paddingBottom: "80px" }}>
         {/* Clinician Header Bar */}
         <div
@@ -449,7 +434,7 @@ export default function DoctorQueue() {
                       }}
                     >
                       {isHigh && <AlertTriangle size={14} />}
-                      {patient.riskTier} Risk ({patient.uveitisProbability.toFixed(1)}%)
+                      {patient.riskTier} Risk ({formatPercent(patient.uveitisProbability)})
                     </div>
                   </div>
 

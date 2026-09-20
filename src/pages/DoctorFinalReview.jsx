@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { finalReviewApi, patientsApi } from "../api/client.js";
+import { finalReviewApi } from "../api/client.js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -17,11 +18,13 @@ import {
   Layers,
   Activity,
 } from "lucide-react";
-import Navbar from "../components/Navbar.jsx";
+import DoctorNavbar from "../components/DoctorNavbar.jsx";
 import Footer from "../components/Footer.jsx";
 import LayerProgress from "../components/LayerProgress.jsx";
 import { samplePatients } from "./DoctorQueue.jsx";
 import { presetSamples } from "./DoctorPatientUpload.jsx";
+import { formatPercent, normalizePatient } from "../utils/formatters.js";
+import { patientsApi } from "../api/client.js";
 import "../styles/doctor.css";
 
 // Questionnaire model index breakdown per patient
@@ -111,24 +114,30 @@ export default function DoctorFinalReview() {
   const { patientId } = useParams();
   const navigate = useNavigate();
 
-  const [activePatient, setActivePatient] = useState(() => samplePatients.find((p) => p.id === patientId) || samplePatients[0]);
+  const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
-    patientsApi.get(patientId).then((p) => {
-      if (p) setActivePatient(p);
-    }).catch(() => {});
+    patientsApi
+      .get(patientId)
+      .then((data) => {
+        if (data && data.id) setPatientData(normalizePatient(data));
+      })
+      .catch(() => { });
   }, [patientId]);
 
-  const patient = activePatient;
+  const rawFallback = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
+  const patient = patientData || normalizePatient(rawFallback);
   const qData = questionnaireModelData[patient.id] || questionnaireModelData.default;
   const cnnData = presetSamples[0].cnnResult;
 
-  const isHigh = (patient.riskTier || patient.risk_tier) === "High";
-  const isMod = (patient.riskTier || patient.risk_tier) === "Moderate";
+  const isHigh = patient.riskTier === "High";
+  const isMod = patient.riskTier === "Moderate";
   const riskColor = isHigh ? "#dc2626" : isMod ? "#d97706" : "#059669";
 
   const [revealed, setRevealed] = useState(false);
   const [revealStep, setRevealStep] = useState(0); // 0=not started, 1=revealing, 2=done
+
+  const combinedScore = (qData.probability * 0.5 + cnnData.confidence * 0.5).toFixed(1);
 
   const handleReveal = async () => {
     setRevealStep(1);
@@ -152,11 +161,9 @@ export default function DoctorFinalReview() {
     }, 800);
   };
 
-  const combinedScore = (qData.probability * 0.5 + cnnData.confidence * 0.5).toFixed(1);
-
   return (
     <div className="doctor-page-wrapper">
-      <Navbar />
+      <DoctorNavbar />
       <div className="container" style={{ paddingTop: "110px", paddingBottom: "80px" }}>
 
         {/* Back */}
@@ -200,15 +207,15 @@ export default function DoctorFinalReview() {
           <div style={{ display: "flex", gap: "20px" }}>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Questionnaire AI</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2563eb" }}>{qData.probability.toFixed(1)}%</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2563eb" }}>{formatPercent(qData.probability)}</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Image CNN AI</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#8b5cf6" }}>{cnnData.confidence}%</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#8b5cf6" }}>{formatPercent(cnnData.confidence)}</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Combined Score</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: riskColor }}>{combinedScore}%</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: riskColor }}>{formatPercent(combinedScore)}</div>
             </div>
           </div>
         </div>
@@ -347,7 +354,7 @@ export default function DoctorFinalReview() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#3b82f6", textTransform: "uppercase" }}>Uveitis Probability</div>
-                      <div style={{ fontSize: "2rem", fontWeight: 900, color: "#1d4ed8", lineHeight: 1 }}>{qData.probability.toFixed(1)}%</div>
+                      <div style={{ fontSize: "2rem", fontWeight: 900, color: "#1d4ed8", lineHeight: 1 }}>{formatPercent(qData.probability)}</div>
                     </div>
                     <div style={{ textAlign: "right" }}>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Severity Class</div>
@@ -391,7 +398,7 @@ export default function DoctorFinalReview() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#7c3aed", textTransform: "uppercase" }}>CNN Confidence</div>
-                      <div style={{ fontSize: "2rem", fontWeight: 900, color: "#7c3aed", lineHeight: 1 }}>{cnnData.confidence}%</div>
+                      <div style={{ fontSize: "2rem", fontWeight: 900, color: "#7c3aed", lineHeight: 1 }}>{formatPercent(cnnData.confidence)}</div>
                     </div>
                     <div
                       style={{
@@ -510,7 +517,7 @@ export default function DoctorFinalReview() {
                   >
                     <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#059669", marginBottom: "4px" }}>Low</div>
                     <div style={{ fontSize: "0.78rem", color: "#047857" }}>
-                      Both models agree — AI is not abstaining. Uncertainty score: {(100 - Number(combinedScore)).toFixed(1)}%
+                      Both models agree — AI is not abstaining. Uncertainty score: {formatPercent(100 - Number(combinedScore))}
                     </div>
                   </div>
                 </div>

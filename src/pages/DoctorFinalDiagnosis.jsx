@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { diagnosisApi, patientsApi } from "../api/client.js";
+import { diagnosisApi } from "../api/client.js";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -17,10 +17,12 @@ import {
   ArrowRight,
   Info,
 } from "lucide-react";
-import Navbar from "../components/Navbar.jsx";
+import DoctorNavbar from "../components/DoctorNavbar.jsx";
 import Footer from "../components/Footer.jsx";
 import LayerProgress from "../components/LayerProgress.jsx";
 import { samplePatients } from "./DoctorQueue.jsx";
+import { formatPercent, normalizePatient } from "../utils/formatters.js";
+import { patientsApi } from "../api/client.js";
 import "../styles/doctor.css";
 
 // Treatment plan templates by diagnosis type
@@ -150,17 +152,21 @@ export default function DoctorFinalDiagnosis() {
   const { patientId } = useParams();
   const navigate = useNavigate();
 
-  const [activePatient, setActivePatient] = useState(() => samplePatients.find((p) => p.id === patientId) || samplePatients[0]);
+  const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
-    patientsApi.get(patientId).then((p) => {
-      if (p) setActivePatient(p);
-    }).catch(() => {});
+    patientsApi
+      .get(patientId)
+      .then((data) => {
+        if (data && data.id) setPatientData(normalizePatient(data));
+      })
+      .catch(() => {});
   }, [patientId]);
 
-  const patient = activePatient;
-  const isHigh = (patient.riskTier || patient.risk_tier) === "High";
-  const isMod = (patient.riskTier || patient.risk_tier) === "Moderate";
+  const rawFallback = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
+  const patient = patientData || normalizePatient(rawFallback);
+  const isHigh = patient.riskTier === "High";
+  const isMod = patient.riskTier === "Moderate";
   const riskColor = isHigh ? "#dc2626" : isMod ? "#d97706" : "#059669";
 
   // Diagnosis form state
@@ -230,7 +236,7 @@ export default function DoctorFinalDiagnosis() {
 
   return (
     <div className="doctor-page-wrapper">
-      <Navbar />
+      <DoctorNavbar />
       <div className="container" style={{ paddingTop: "110px", paddingBottom: "80px" }}>
 
         {/* Back */}

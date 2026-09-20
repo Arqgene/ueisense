@@ -1,8 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import UveitisQuestionnaire from "./pages/UveitisQuestionnaire.jsx";
 import DoctorLogin from "./pages/DoctorLogin.jsx";
 import DoctorQueue from "./pages/DoctorQueue.jsx";
+import DoctorAnalytics from "./pages/DoctorAnalytics.jsx";
+import DoctorReferrals from "./pages/DoctorReferrals.jsx";
+import DoctorAudit from "./pages/DoctorAudit.jsx";
 // Layer 4 — Doctor Dashboard (Q&A Review + AI Explanation + Preliminary Assessment)
 import DoctorDashboard from "./pages/DoctorDashboard.jsx";
 // Layer 5 — Imaging Upload (CNN results hidden)
@@ -19,8 +22,12 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/questionnaire" element={<UveitisQuestionnaire />} />
         <Route path="/doctor-login" element={<DoctorLogin />} />
+        <Route path="/doctor" element={<Navigate to="/doctor/queue" replace />} />
         <Route path="/doctor/queue" element={<DoctorQueue />} />
-        {/* Doctor workflow — Layers 4 → 7 */}
+        <Route path="/doctor/analytics" element={<DoctorAnalytics />} />
+        <Route path="/doctor/referrals" element={<DoctorReferrals />} />
+        <Route path="/doctor/audit" element={<DoctorAudit />} />
+        {/* Doctor patient workspace — Layers 4 → 7 */}
         <Route path="/doctor/patient/:patientId/dashboard" element={<DoctorDashboard />} />
         <Route path="/doctor/patient/:patientId/imaging" element={<DoctorPatientUpload />} />
         <Route path="/doctor/patient/:patientId/final-review" element={<DoctorFinalReview />} />

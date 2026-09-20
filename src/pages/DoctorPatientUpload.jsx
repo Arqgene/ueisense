@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { imagingApi, patientsApi } from "../api/client.js";
+import { imagingApi } from "../api/client.js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,10 +20,12 @@ import {
   EyeOff,
   RefreshCw,
 } from "lucide-react";
-import Navbar from "../components/Navbar.jsx";
+import DoctorNavbar from "../components/DoctorNavbar.jsx";
 import Footer from "../components/Footer.jsx";
 import LayerProgress from "../components/LayerProgress.jsx";
 import { samplePatients } from "./DoctorQueue.jsx";
+import { formatPercent, normalizePatient } from "../utils/formatters.js";
+import { patientsApi } from "../api/client.js";
 import "../styles/doctor.css";
 
 // Preset slitlamp samples — CNN overlay boxes are defined but hidden here (revealed in Layer 6)
@@ -78,15 +81,19 @@ export default function DoctorImagingUpload() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const [activePatient, setActivePatient] = useState(() => samplePatients.find((p) => p.id === patientId) || samplePatients[0]);
+  const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
-    patientsApi.get(patientId).then((p) => {
-      if (p) setActivePatient(p);
-    }).catch(() => {});
+    patientsApi
+      .get(patientId)
+      .then((data) => {
+        if (data && data.id) setPatientData(normalizePatient(data));
+      })
+      .catch(() => { });
   }, [patientId]);
 
-  const patient = activePatient;
+  const rawFallback = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
+  const patient = patientData || normalizePatient(rawFallback);
 
   const [selectedSample, setSelectedSample] = useState(presetSamples[0]);
   const [customImage, setCustomImage] = useState(null);
@@ -144,7 +151,7 @@ export default function DoctorImagingUpload() {
 
   return (
     <div className="doctor-page-wrapper">
-      <Navbar />
+      <DoctorNavbar />
       <div className="container" style={{ paddingTop: "110px", paddingBottom: "80px" }}>
 
         {/* Back Button */}

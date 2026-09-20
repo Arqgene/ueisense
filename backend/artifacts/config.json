@@ -1,0 +1,6 @@
+{
+  "epochs": 25,
+  "features_count": 6,
+  "dataset_rows": 100000,
+  "loss": 3.5521041915893554
+}

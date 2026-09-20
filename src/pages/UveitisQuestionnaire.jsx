@@ -20,7 +20,6 @@ import {
   AlertCircle,
   Leaf,
 } from "lucide-react";
-import { patientsApi, questionnaireApi, neuroFuzzyApi } from "../api/client.js";
 import "../styles/uveitisQuestionnaire.css";
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -725,6 +724,10 @@ export default function UveitisQuestionnaire() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitState, setSubmitState] = useState({ status: "idle", message: "" });
   const [predictionResult, setPredictionResult] = useState(null);
+  const [eyeImage, setEyeImage] = useState(null);
+  const [eyePrediction, setEyePrediction] = useState(null);
+  const [isClassifyingEye, setIsClassifyingEye] = useState(false);
+  const [eyeClassificationError, setEyeClassificationError] = useState("");
   const [validationErrors, setValidationErrors] = useState([]);
 
   // ── Draft hydration & auto-save ──
@@ -741,20 +744,6 @@ export default function UveitisQuestionnaire() {
   // ── Derived ──
   const progress = useMemo(() => Math.round(((stepIndex + 1) / STEPS.length) * 100), [stepIndex]);
   const liveIndices = useMemo(() => getLiveFuzzyIndices(formData), [formData]);
-  const activeIndices = useMemo(() => {
-    if (predictionResult?.fuzzy_indices) {
-      return {
-        inflammation: (predictionResult.fuzzy_indices.inflammation || 0) * 100,
-        visual: (predictionResult.fuzzy_indices.visual || 0) * 100,
-        autoimmune: (predictionResult.fuzzy_indices.autoimmune || 0) * 100,
-        infectious: (predictionResult.fuzzy_indices.infectious || 0) * 100,
-        recurrence: (predictionResult.fuzzy_indices.recurrence || 0) * 100,
-        urgency: (predictionResult.fuzzy_indices.urgency || 0) * 100,
-      };
-    }
-    return liveIndices;
-  }, [liveIndices, predictionResult]);
-
   const currentStep = STEPS[stepIndex];
 
   // ── Field updater ──
@@ -784,6 +773,40 @@ export default function UveitisQuestionnaire() {
     setValidationErrors([]);
     setSubmitState({ status: "idle", message: "" });
     setPredictionResult(null);
+    setEyeImage(null);
+    setEyePrediction(null);
+    setEyeClassificationError("");
+  };
+
+  const classifyEyeImage = async () => {
+    if (!eyeImage) return;
+    setIsClassifyingEye(true);
+    setEyePrediction(null);
+    setEyeClassificationError("");
+
+    try {
+      const form = new FormData();
+      form.append("image", eyeImage);
+      const response = await fetch("/predict-image", { method: "POST", body: form });
+      const responseText = await response.text();
+      let result = null;
+      try {
+        result = responseText ? JSON.parse(responseText) : null;
+      } catch {
+        result = null;
+      }
+      if (!response.ok) {
+        throw new Error(result?.detail || responseText || `Server returned status ${response.status}`);
+      }
+      if (!result?.probable_disease) {
+        throw new Error("The image classifier returned an invalid response.");
+      }
+      setEyePrediction(result);
+    } catch (error) {
+      setEyeClassificationError(error.message || "Unable to classify this image.");
+    } finally {
+      setIsClassifyingEye(false);
+    }
   };
 
   // ── Submit ──
@@ -809,19 +832,29 @@ export default function UveitisQuestionnaire() {
     const payload = buildLegacyPayload(formData);
 
     try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Server returned status ${res.status}`);
+      const result = await res.json();
+      setPredictionResult(result);
+      setSubmitState({ status: "success", message: "Patient intake processed. Adaptive Neuro-Fuzzy analytics loaded." });
+      localStorage.removeItem(DRAFT_KEY);
+    } catch (error) {
+      console.warn("Prediction endpoint call failed, using client rule assessment fallback:", error);
       const probDecimal = Math.max(0.0, Math.min(1.0, liveIndices.urgency / 100.0));
       const forceReferral = liveIndices.urgency >= 70 || (liveIndices.inflammation >= 70 && liveIndices.visual >= 70);
       const uveitisYesNo = probDecimal >= 0.5 || forceReferral ? 1 : 0;
       const calculatedSeverity = 0.35 * liveIndices.inflammation + 0.30 * liveIndices.visual + 0.20 * liveIndices.urgency + 0.10 * liveIndices.recurrence + 0.05 * liveIndices.autoimmune;
-      const severityClass = calculatedSeverity >= 65 ? "Severe Acute Uveitis" : calculatedSeverity >= 35 ? "Moderate Uveitis" : "Mild ocular irritation";
-      const clinicalRisk = uveitisYesNo === 1 ? "High" : probDecimal >= 0.35 || calculatedSeverity >= 35 ? "Moderate" : "Low";
 
-      const res = {
+      setPredictionResult({
         uveitis_probability: probDecimal,
         uveitis_yes_no: uveitisYesNo,
         severity_score: calculatedSeverity,
-        severity_class: severityClass,
-        clinical_risk: clinicalRisk,
+        severity_class: calculatedSeverity >= 65 ? "Severe" : calculatedSeverity >= 35 ? "Moderate" : "Mild",
+        clinical_risk: uveitisYesNo === 1 ? "High" : probDecimal >= 0.35 || calculatedSeverity >= 35 ? "Moderate" : "Low",
         fuzzy_indices: {
           inflammation: liveIndices.inflammation / 100,
           visual: liveIndices.visual / 100,
@@ -838,45 +871,9 @@ export default function UveitisQuestionnaire() {
           liveIndices.inflammation > 50 ? "Significant localized clinical inflammation scores." : "Mild inflammatory values.",
           formData.previous_uveitis === "Yes" ? "Ocular history indicates recurrence risk profiles." : "First-time clinical screening profile.",
         ],
-      };
-
-      setPredictionResult(res);
-
-      // Persist newly created patient to client database
-      const newPatient = await patientsApi.create({
-        name: formData.name || "Patient Intake",
-        age: parseInt(formData.age, 10) || 35,
-        sex: formData.sex || "Female",
-        affected_eye: formData.affected_eye || "Left Eye",
-        symptom_start: `${formData.symptom_start_days || 2} days ago`,
-        onset_type: formData.onset_type || "Sudden",
-        risk_tier: clinicalRisk,
-        uveitis_prob: parseFloat((probDecimal * 100).toFixed(1)),
-        urgency_index: Math.round(liveIndices.urgency),
-        severity_class: severityClass,
-        rednessScore: parseInt(formData.redness_score, 10) || 5,
-        painScore: parseInt(formData.pain_score, 10) || 5,
-        photophobiaScore: parseInt(formData.photophobia_score, 10) || 5,
-        blurredScore: parseInt(formData.blurred_vision_score, 10) || 4,
-        autoimmuneFlag: formData.autoimmune_disease === "Yes",
-        priorUveitis: formData.previous_uveitis === "Yes",
-        slitlamp_status: "Awaiting Photo",
-        primarySymptoms: [
-          formData.onset_type ? `${formData.onset_type} Onset` : "Acute Symptoms",
-          `Pain ${formData.pain_score || 5}/10`,
-          `Photophobia ${formData.photophobia_score || 5}/10`,
-        ],
       });
-
-      // Save Q&A and neuro-fuzzy results
-      await questionnaireApi.save(newPatient.id, "all", formData);
-      await neuroFuzzyApi.save({ patient_id: newPatient.id, ...res });
-
-      setSubmitState({ status: "success", message: `Patient intake processed. Record ${newPatient.id} created.` });
+      setSubmitState({ status: "success", message: "Intake complete. (Displaying local simulation fallback prediction)" });
       localStorage.removeItem(DRAFT_KEY);
-    } catch (error) {
-      console.error("Intake processing error:", error);
-      setSubmitState({ status: "error", message: "Failed to process intake." });
     } finally {
       setIsSubmitting(false);
     }
@@ -1417,6 +1414,7 @@ export default function UveitisQuestionnaire() {
             onChange={(e) => updateField("other_systemic_medications", e.target.value)}
           />
         </div>
+
       </div>
     </div>
   );
@@ -1428,46 +1426,58 @@ export default function UveitisQuestionnaire() {
      ════════════════════════════════════════════════════════════════════════════ */
 
   const renderAnalytics = () => {
-    const bars = [
-      { label: "Ocular Inflammation", key: "inflammation", color: "#3b82f6" },
-      { label: "Visual Dysfunction", key: "visual", color: "#06b6d4" },
-      { label: "Autoimmune Markers", key: "autoimmune", color: "#8b5cf6" },
-      { label: "Pathogen / Infectious", key: "infectious", color: "#f59e0b" },
-      { label: "Recurrence Risk", key: "recurrence", color: "#ec4899" },
-      { label: "Referral Urgency", key: "urgency", color: "#ef4444" },
-    ];
+    const questionnaireProbability = Math.max(0, Math.min(1, Number(predictionResult?.uveitis_probability) || 0));
+    const imageProbability = Math.max(0, Math.min(1, Number(eyePrediction?.class_probabilities?.Uveitis) || 0));
+    const hasCombinedProbability = Boolean(predictionResult && eyePrediction);
+    const probability = (questionnaireProbability + imageProbability) / 2;
+    const probabilityPercent = Math.round(probability * 100);
     return (
       <div className="uf-sidebar-analytics">
-        <div className="uf-analytics-card card">
-          <h3>
-            <Activity size={18} style={{ color: "#2563eb", marginRight: 8, verticalAlign: "middle" }} />
-            Clinical Decision Support
-          </h3>
-          <p className="uf-analytics-subtitle">Adaptive Neuro-Fuzzy Output</p>
-          <div className="uf-analytics-bars">
-            {bars.map((b) => (
-              <div key={b.key} className="uf-analytics-bar-item">
-                <div className="uf-bar-meta">
-                  <span>{b.label}</span>
-                  <span>{activeIndices[b.key].toFixed(0)}%</span>
-                </div>
-                <div className="uf-bar-track">
-                  <div className="uf-bar-fill" style={{ width: `${activeIndices[b.key]}%`, backgroundColor: b.color }} />
-                </div>
-              </div>
-            ))}
-          </div>
-          {predictionResult?.explanation && (
-            <div className="uf-analytics-explanations">
-              <h4>Clinical Explanations</h4>
-              <ul>
-                {predictionResult.explanation.map((exp, idx) => (
-                  <li key={idx}>{exp}</li>
-                ))}
-              </ul>
+        <div className="uf-eye-classifier card">
+          <div className="uf-confidence-label">Deep learning eye image analysis</div>
+          <h3>Confirm with an eye image</h3>
+          <p className="uf-eye-classifier-copy">Upload a clear eye photograph for a five-class visual screening model.</p>
+          <label className="uf-image-upload">
+            <Eye size={18} />
+            <span>{eyeImage ? eyeImage.name : "Choose eye image"}</span>
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/bmp"
+              onChange={(event) => {
+                setEyeImage(event.target.files?.[0] || null);
+                setEyePrediction(null);
+                setEyeClassificationError("");
+              }}
+            />
+          </label>
+          <button type="button" className="uf-btn uf-btn-primary uf-image-classify-btn" onClick={classifyEyeImage} disabled={!eyeImage || isClassifyingEye}>
+            {isClassifyingEye ? <><Loader2 size={17} className="spin" /> Classifying image…</> : <>Classify eye image <ArrowRight size={17} /></>}
+          </button>
+          {eyeClassificationError && <div className="uf-image-error">{eyeClassificationError}</div>}
+          {eyePrediction && (
+            <div className="uf-eye-result">
+              <span>Predicted disease</span>
+              <strong>{eyePrediction.probable_disease}</strong>
+              <small>{Math.round(eyePrediction.confidence * 100)}% model confidence. This is a screening result, not a medical diagnosis.</small>
             </div>
           )}
         </div>
+        {hasCombinedProbability && (
+          <div className="uf-confidence-card card">
+            <div className="uf-confidence-label">Combined screening result</div>
+            <div className="uf-confidence-row">
+              <div>
+                <h3>Uveitis likelihood</h3>
+                <p>Average of questionnaire and image models</p>
+              </div>
+              <strong>{probabilityPercent}%</strong>
+            </div>
+            <div className="uf-confidence-track" aria-label={`Uveitis likelihood ${probabilityPercent}%`}>
+              <div className="uf-confidence-fill" style={{ width: `${probabilityPercent}%` }} />
+            </div>
+            <small>This is a screening probability, not a medical diagnosis. Please discuss the result with an ophthalmologist.</small>
+          </div>
+        )}
       </div>
     );
   };

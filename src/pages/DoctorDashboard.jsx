@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { assessmentsApi, patientsApi } from "../api/client.js";
+import { assessmentsApi } from "../api/client.js";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -23,10 +24,12 @@ import {
   Clock,
   Stethoscope,
 } from "lucide-react";
-import Navbar from "../components/Navbar.jsx";
+import DoctorNavbar from "../components/DoctorNavbar.jsx";
 import Footer from "../components/Footer.jsx";
 import LayerProgress from "../components/LayerProgress.jsx";
 import { samplePatients } from "./DoctorQueue.jsx";
+import { formatPercent, normalizePatient } from "../utils/formatters.js";
+import { patientsApi } from "../api/client.js";
 import "../styles/doctor.css";
 
 // Detailed simulated Q&A answers per patient
@@ -202,7 +205,8 @@ const SectionAccordion = ({ title, children, defaultOpen = false, accentColor = 
 
 // Gauge arc component
 function UncertaintyGauge({ value, label, color }) {
-  const clampedVal = Math.min(100, Math.max(0, value));
+  const num = typeof value === "number" ? value : parseFloat(value) || 0;
+  const clampedVal = Math.round(Math.min(100, Math.max(0, num)));
   const radius = 56;
   const circumference = Math.PI * radius;
   const strokeDash = (clampedVal / 100) * circumference;
@@ -241,20 +245,24 @@ export default function DoctorDashboard() {
   const { patientId } = useParams();
   const navigate = useNavigate();
 
-  const [activePatient, setActivePatient] = useState(() => samplePatients.find((p) => p.id === patientId) || samplePatients[0]);
+  const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
-    patientsApi.get(patientId).then((p) => {
-      if (p) setActivePatient(p);
-    }).catch(() => {});
+    patientsApi
+      .get(patientId)
+      .then((data) => {
+        if (data && data.id) setPatientData(normalizePatient(data));
+      })
+      .catch(() => { });
   }, [patientId]);
 
-  const patient = activePatient;
+  const rawFallback = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
+  const patient = patientData || normalizePatient(rawFallback);
   const qa = patientQAAnswers[patient.id] || patientQAAnswers["PT-8942"];
   const factors = aiExplanationFactors[patient.id] || aiExplanationFactors.default;
 
-  const isHigh = (patient.riskTier || patient.risk_tier) === "High";
-  const isMod = (patient.riskTier || patient.risk_tier) === "Moderate";
+  const isHigh = patient.riskTier === "High";
+  const isMod = patient.riskTier === "Moderate";
 
   // Doctor preliminary assessment form state
   const [provDiagnosis, setProvDiagnosis] = useState("");
@@ -291,7 +299,7 @@ export default function DoctorDashboard() {
 
   return (
     <div className="doctor-page-wrapper">
-      <Navbar />
+      <DoctorNavbar />
       <div className="container" style={{ paddingTop: "110px", paddingBottom: "80px" }}>
 
         {/* Back Button */}
@@ -372,7 +380,7 @@ export default function DoctorDashboard() {
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Uveitis Prob.</div>
               <div style={{ fontSize: "1.6rem", fontWeight: 900, color: riskColor, lineHeight: 1 }}>
-                {patient.uveitisProbability.toFixed(1)}%
+                {formatPercent(patient.uveitisProbability)}
               </div>
             </div>
             <div style={{ textAlign: "center" }}>
@@ -570,7 +578,7 @@ export default function DoctorDashboard() {
                 AI Explainability — Key Factors
               </h3>
               <p style={{ margin: "0 0 16px", fontSize: "0.8rem", color: "#64748b" }}>
-                Why did the model predict {patient.uveitisProbability.toFixed(1)}% uveitis probability?
+                Why did the model predict {formatPercent(patient.uveitisProbability)} uveitis probability?
               </p>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>

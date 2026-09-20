@@ -1,0 +1,17 @@
+{
+  "name": "uveitis-api-server",
+  "version": "1.0.0",
+  "description": "SQLite REST API for Uveitis AI Diagnosis System",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "*",
+    "cors": "*",
+    "express": "*",
+    "multer": "*"
+  }
+}
