@@ -13,18 +13,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /app/server
 
 # Install production server dependencies
-COPY server/package.json ./server/package.json
-COPY server/package-lock.json* ./server/package-lock.json
-RUN cd server && npm ci --omit=dev && npm cache clean --force
+COPY server/package.json ./package.json
+COPY server/package-lock.json* ./package-lock.json
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy server code
-COPY server ./server
+COPY server ./
 
 # Create persistent directories
-RUN mkdir -p server/db server/uploads
+RUN mkdir -p db uploads
 
 ENV PORT=3001
 ENV NODE_ENV=production
@@ -36,4 +36,4 @@ EXPOSE 3001
 HEALTHCHECK --interval=20s --timeout=8s --start-period=10s --retries=5 \
     CMD curl -f http://localhost:3001/api/health || exit 1
 
-CMD ["node", "server/index.js"]
+CMD ["node", "index.js"]
