@@ -1,37 +1,37 @@
 import { motion } from "framer-motion";
-import { AlertTriangle, Eye, TimerReset, Stethoscope, ScanEye } from "lucide-react";
+import { AlertTriangle, Eye, TimerReset, Stethoscope, ScanEye, Building2 } from "lucide-react";
 
 const painPoints = [
   {
     icon: <AlertTriangle size={18} />,
-    title: "Subjective early symptoms",
-    text: "Early uveitis signs are vague and easily missed in non-specialist settings.",
+    title: "10-15% of Preventable Blindness",
+    text: "Uveitis is the 3rd leading cause of preventable blindness in the working-age population, often misdiagnosed as simple conjunctivitis.",
   },
   {
     icon: <Eye size={18} />,
-    title: "Expert-dependent examination",
-    text: "Slit-lamp interpretation depends on experience and clinical context.",
+    title: "Subtle Slit-Lamp Biomarkers",
+    text: "Keratic precipitates, anterior chamber flare, and hypopyon require seasoned ophthalmic expertise to detect in early stages.",
   },
   {
     icon: <ScanEye size={18} />,
-    title: "Variable image interpretation",
-    text: "Image quality and interpretation can vary across users and devices.",
+    title: "Multi-Modal AI Synergy",
+    text: "Pure symptom checklists or standalone CNN models fall short. Fusing fuzzy symptom reasoning with deep image models achieves clinical-grade triage.",
   },
   {
     icon: <TimerReset size={18} />,
-    title: "Recurrence is common",
-    text: "Repeated episodes require follow-up rather than one-time classification.",
+    title: "High Risk of Recurrence",
+    text: "Over 60% of non-infectious anterior uveitis cases flare repeatedly, demanding longitudinal risk modeling and HLA-B27 tracking.",
   },
   {
-    icon: <Stethoscope size={18} />,
-    title: "Delayed access to specialists",
-    text: "A structured front-end screening layer can help with earlier referral.",
+    icon: <Building2 size={18} />,
+    title: "Direct Specialist Routing",
+    text: "Bridging patients from home screening directly to the nearest Dr. Agarwal's Eye Hospital tertiary uveitis clinic eliminates diagnostic delays.",
   },
 ];
 
 export default function ClinicalProblem() {
   return (
-    <section className="section section-alt" id="problem">
+    <section className="section section-alt" id="mission">
       <div className="container">
         <motion.div
           className="section-head"
@@ -40,12 +40,10 @@ export default function ClinicalProblem() {
           viewport={{ once: true }}
           transition={{ duration: 0.55 }}
         >
-          <span className="section-label">Clinical problem</span>
-          <h2 className="section-title">Why a simple CNN is not enough.</h2>
+          <span className="section-label">Partnership &amp; Mission</span>
+          <h2 className="section-title">The Arqgene × Dr. Agarwal's Clinical Mission</h2>
           <p className="section-subtitle">
-            Uveitis screening needs more than a binary classifier. It needs
-            symptom reasoning, image validation, localization, explainability,
-            and recurrence-aware support.
+            Bridging the gap between intelligent home triage and India's foremost ocular immunology clinics to prevent irreversible vision loss and streamline urgent care.
           </p>
         </motion.div>
 
@@ -69,3 +67,4 @@ export default function ClinicalProblem() {
     </section>
   );
 }
+

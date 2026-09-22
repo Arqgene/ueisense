@@ -61,6 +61,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "service": "ueisense-ml-backend"}
+
 # Train once on first startup, then reuse the persisted Random Forest pipeline.
 random_forest = load_or_train_random_forest()
 

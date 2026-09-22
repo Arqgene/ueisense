@@ -183,38 +183,175 @@ db.exec(`
 `);
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SEED: Default doctor accounts
+// SAFE SCHEMA UPGRADE (Add new columns to existing DB if missing)
 // ─────────────────────────────────────────────────────────────────────────────
-const existingDoctors = db.prepare("SELECT COUNT(*) as cnt FROM doctors").get();
-if (existingDoctors.cnt === 0) {
-  const insertDoctor = db.prepare(`
-    INSERT OR IGNORE INTO doctors (id, name, email, password_hash, clinic, specialty)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `);
-  insertDoctor.run("DR-001", "Dr. Elena Rostova", "dr.elena.rostova@eyeclinic.org", "demo_hash_1", "Metropolitan Ocular Immunology Center", "Uveitis & Inflammatory Eye Disease");
-  insertDoctor.run("DR-002", "Dr. Marcus Vance",  "dr.marcus.vance@retina.org",      "demo_hash_2", "Vision & Retina Specialists",          "Retinal Vasculitis & Posterior Uveitis");
-  insertDoctor.run("DR-003", "Dr. Priya Patel",   "dr.priya.patel@university.org",   "demo_hash_3", "University Eye Institute & Research",  "Anterior Uveitis & Cornea");
+function ensureColumn(table, column, def) {
+  try {
+    const info = db.prepare(`PRAGMA table_info(${table})`).all();
+    if (!info.some((c) => c.name === column)) {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${def}`);
+    }
+  } catch (e) {
+    console.warn(`Could not ensure column ${table}.${column}:`, e.message);
+  }
 }
 
+ensureColumn("patients", "phone", "TEXT");
+ensureColumn("patients", "assigned_doctor_id", "TEXT");
+ensureColumn("patients", "assigned_doctor_name", "TEXT");
+ensureColumn("patients", "hospital_branch", "TEXT");
+ensureColumn("patients", "image_url", "TEXT");
+
+// Referral & Multi-Doctor Access columns
+ensureColumn("patients", "referred_to_doctor_id", "TEXT");
+ensureColumn("patients", "referred_by_doctor_id", "TEXT");
+ensureColumn("patients", "referral_notes", "TEXT");
+ensureColumn("patients", "referred_at", "TEXT");
+
+// Case Closure & Clinical Status
+ensureColumn("patients", "case_status", "TEXT DEFAULT 'active'");
+ensureColumn("patients", "closure_reason", "TEXT");
+ensureColumn("patients", "closed_at", "TEXT");
+ensureColumn("patients", "closed_by_doctor_id", "TEXT");
+ensureColumn("patients", "discharge_summary", "TEXT");
+
+// Junior Doctor Clinical Annotations & Senior Oversight
+ensureColumn("patients", "junior_annotations_json", "TEXT");
+ensureColumn("patients", "senior_approval_status", "TEXT DEFAULT 'none'");
+ensureColumn("patients", "senior_approved_at", "TEXT");
+ensureColumn("patients", "senior_approved_by", "TEXT");
+ensureColumn("patients", "senior_notes", "TEXT");
+
+// Imaging Sessions upgrades
+ensureColumn("imaging_sessions", "doctor_annotations_json", "TEXT");
+ensureColumn("imaging_sessions", "ai_subtype_prediction_json", "TEXT");
+ensureColumn("imaging_sessions", "sealed_for_junior", "INTEGER DEFAULT 0");
+
+ensureColumn("neuro_fuzzy_results", "feature_importance_json", "TEXT");
+ensureColumn("cnn_results", "gradcam_data_json", "TEXT");
+ensureColumn("doctors", "city", "TEXT");
+ensureColumn("doctors", "phone", "TEXT");
+ensureColumn("doctors", "distance_label", "TEXT");
+ensureColumn("doctors", "role", "TEXT DEFAULT 'senior'");
+ensureColumn("doctors", "supervisor_id", "TEXT");
+ensureColumn("doctors", "supervisor_name", "TEXT");
+
 // ─────────────────────────────────────────────────────────────────────────────
-// SEED: Sample patients (matching the frontend samplePatients array)
+// SEED: Dr. Agarwal's Eye Hospital Uveitis Specialists & Network Doctors
+// ─────────────────────────────────────────────────────────────────────────────
+const agarwalDoctors = [
+  {
+    id: "DR-AG-01",
+    name: "Dr. Soundari S., MS, FMRF",
+    email: "dr.soundari@agarwaleye.com",
+    clinic: "Dr. Agarwal's Eye Hospital - Cathedral Road (Chennai Main)",
+    specialty: "Senior Consultant - Uveitis & Ocular Immunology",
+    city: "Chennai",
+    phone: "+91 44 4378 7777",
+    distance_label: "2.1 km away",
+    role: "senior",
+    supervisor_id: null,
+    supervisor_name: null,
+  },
+  {
+    id: "DR-AG-02",
+    name: "Dr. Ramamurthy Sundar, DNB, FRCS",
+    email: "dr.ramamurthy@agarwaleye.com",
+    clinic: "Dr. Agarwal's Eye Hospital - Indiranagar",
+    specialty: "Vitreo-Retina & Posterior Uveitis Specialist",
+    city: "Bengaluru",
+    phone: "+91 80 4680 8800",
+    distance_label: "5.4 km away",
+    role: "senior",
+    supervisor_id: null,
+    supervisor_name: null,
+  },
+  {
+    id: "DR-AG-03",
+    name: "Dr. V. Rajeshwari, MS",
+    email: "dr.rajeshwari@agarwaleye.com",
+    clinic: "Dr. Agarwal's Eye Hospital - Banjara Hills",
+    specialty: "Senior Consultant - Uveitis & Cornea",
+    city: "Hyderabad",
+    phone: "+91 40 6815 6500",
+    distance_label: "7.8 km away",
+    role: "senior",
+    supervisor_id: null,
+    supervisor_name: null,
+  },
+  {
+    id: "DR-AG-04",
+    name: "Dr. Anand Parthasarathy, MS, FICO",
+    email: "dr.anand@agarwaleye.com",
+    clinic: "Dr. Agarwal's Eye Hospital - Velachery",
+    specialty: "Anterior Segment & Uveitis Specialist",
+    city: "Chennai",
+    phone: "+91 44 4055 4055",
+    distance_label: "9.2 km away",
+    role: "junior",
+    supervisor_id: "DR-AG-01",
+    supervisor_name: "Dr. Soundari S., MS, FMRF",
+  },
+  {
+    id: "DR-AG-05",
+    name: "Dr. Preethi Govindarajan, MD",
+    email: "dr.preethi@agarwaleye.com",
+    clinic: "Dr. Agarwal's Eye Hospital - R.S. Puram",
+    specialty: "Paediatric & Autoimmune Uveitis Specialist",
+    city: "Coimbatore",
+    phone: "+91 422 422 8800",
+    distance_label: "12.0 km away",
+    role: "junior",
+    supervisor_id: "DR-AG-02",
+    supervisor_name: "Dr. Ramamurthy Sundar, DNB, FRCS",
+  },
+];
+
+const insertOrUpdateDoctor = db.prepare(`
+  INSERT INTO doctors (id, name, email, password_hash, clinic, specialty, city, phone, distance_label, role, supervisor_id, supervisor_name)
+  VALUES (@id, @name, @email, 'demo_hash_agarwal', @clinic, @specialty, @city, @phone, @distance_label, @role, @supervisor_id, @supervisor_name)
+  ON CONFLICT(id) DO UPDATE SET
+    name = excluded.name,
+    email = excluded.email,
+    clinic = excluded.clinic,
+    specialty = excluded.specialty,
+    city = excluded.city,
+    phone = excluded.phone,
+    distance_label = excluded.distance_label,
+    role = excluded.role,
+    supervisor_id = excluded.supervisor_id,
+    supervisor_name = excluded.supervisor_name
+`);
+
+for (const doc of agarwalDoctors) {
+  insertOrUpdateDoctor.run(doc);
+}
+
+// Seed legacy fallback doctors if not already present
+db.prepare(`
+  INSERT OR IGNORE INTO doctors (id, name, email, password_hash, clinic, specialty)
+  VALUES ('DR-001', 'Dr. Elena Rostova', 'dr.elena.rostova@eyeclinic.org', 'demo_hash_1', 'Metropolitan Ocular Immunology Center', 'Uveitis & Inflammatory Eye Disease')
+`).run();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SEED: Sample patients
 // ─────────────────────────────────────────────────────────────────────────────
 const existingPatients = db.prepare("SELECT COUNT(*) as cnt FROM patients").get();
 if (existingPatients.cnt === 0) {
   const insertPatient = db.prepare(`
     INSERT OR IGNORE INTO patients
       (id, name, age, sex, affected_eye, symptom_start, onset_type, risk_tier,
-       uveitis_prob, urgency_index, severity_class, slitlamp_status, submitted_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       uveitis_prob, urgency_index, severity_class, slitlamp_status, assigned_doctor_id, assigned_doctor_name, hospital_branch, submitted_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   const patients = [
-    ["PT-8942", "Sarah Jenkins",    42, "Female", "Left Eye",   "2 days ago", "Sudden",  "High",     94.2, 88, "Severe Acute Anterior Uveitis",            "Awaiting Photo", new Date(Date.now() - 12 * 60000).toISOString()],
-    ["PT-8945", "Robert Vance",     58, "Male",   "Right Eye",  "4 days ago", "Sudden",  "High",     89.5, 82, "Intermediate / Posterior Vasculitis",      "Photo Uploaded", new Date(Date.now() - 35 * 60000).toISOString()],
-    ["PT-8939", "Amanda Chen",      31, "Female", "Both Eyes",  "5 days ago", "Gradual", "Moderate", 64.0, 55, "Moderate Recurrent Anterior Uveitis",      "Photo Uploaded", new Date(Date.now() - 60 * 60000).toISOString()],
-    ["PT-8935", "Michael Ross",     49, "Male",   "Right Eye",  "1 week ago", "Gradual", "Moderate", 58.2, 48, "Post-Traumatic Mild Inflammation",         "Awaiting Photo", new Date(Date.now() - 120 * 60000).toISOString()],
-    ["PT-8930", "Elena Rodriguez",  26, "Female", "Left Eye",   "3 days ago", "Gradual", "Low",      21.0, 15, "Low Risk / Dry Eye Strain",               "Cleared",        new Date(Date.now() - 180 * 60000).toISOString()],
-    ["PT-8924", "David Miller",     65, "Male",   "Both Eyes",  "6 days ago", "Gradual", "Low",      18.5, 12, "Allergic Conjunctivitis Suspicion",       "Cleared",        new Date(Date.now() - 300 * 60000).toISOString()],
+    ["PT-8942", "Sarah Jenkins",    42, "Female", "Left Eye",   "2 days ago", "Sudden",  "High",     94.2, 88, "Severe Acute Anterior Uveitis",            "Photo Uploaded", "DR-AG-01", "Dr. Soundari S., MS, FMRF", "Dr. Agarwal's Eye Hospital - Cathedral Road (Chennai Main)", new Date(Date.now() - 12 * 60000).toISOString()],
+    ["PT-8945", "Robert Vance",     58, "Male",   "Right Eye",  "4 days ago", "Sudden",  "High",     89.5, 82, "Intermediate / Posterior Vasculitis",      "Photo Uploaded", "DR-AG-02", "Dr. Ramamurthy Sundar, DNB, FRCS", "Dr. Agarwal's Eye Hospital - Indiranagar", new Date(Date.now() - 35 * 60000).toISOString()],
+    ["PT-8939", "Amanda Chen",      31, "Female", "Both Eyes",  "5 days ago", "Gradual", "Moderate", 64.0, 55, "Moderate Recurrent Anterior Uveitis",      "Photo Uploaded", "DR-AG-03", "Dr. V. Rajeshwari, MS", "Dr. Agarwal's Eye Hospital - Banjara Hills", new Date(Date.now() - 60 * 60000).toISOString()],
+    ["PT-8935", "Michael Ross",     49, "Male",   "Right Eye",  "1 week ago", "Gradual", "Moderate", 58.2, 48, "Post-Traumatic Mild Inflammation",         "Awaiting Photo", "DR-AG-01", "Dr. Soundari S., MS, FMRF", "Dr. Agarwal's Eye Hospital - Cathedral Road (Chennai Main)", new Date(Date.now() - 120 * 60000).toISOString()],
+    ["PT-8930", "Elena Rodriguez",  26, "Female", "Left Eye",   "3 days ago", "Gradual", "Low",      21.0, 15, "Low Risk / Dry Eye Strain",               "Cleared",        "DR-AG-04", "Dr. Anand Parthasarathy, MS, FICO", "Dr. Agarwal's Eye Hospital - Velachery", new Date(Date.now() - 180 * 60000).toISOString()],
+    ["PT-8924", "David Miller",     65, "Male",   "Both Eyes",  "6 days ago", "Gradual", "Low",      18.5, 12, "Allergic Conjunctivitis Suspicion",       "Cleared",        "DR-AG-05", "Dr. Preethi Govindarajan, MD", "Dr. Agarwal's Eye Hospital - R.S. Puram", new Date(Date.now() - 300 * 60000).toISOString()],
   ];
 
   for (const p of patients) insertPatient.run(...p);
@@ -239,16 +376,28 @@ if (existingPatients.cnt === 0) {
     INSERT OR IGNORE INTO neuro_fuzzy_results
       (patient_id, uveitis_prob, uveitis_yes_no, severity_score, severity_class,
        clinical_risk, inflammation_idx, visual_idx, autoimmune_idx, infectious_idx,
-       recurrence_idx, urgency_idx, explanation_json, uncertainty_score)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       recurrence_idx, urgency_idx, explanation_json, uncertainty_score, feature_importance_json)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     "PT-8942", 0.942, 1, 89.4, "Severe", "High",
     0.92, 0.78, 0.88, 0.22, 0.35, 0.91,
-    JSON.stringify(["Sudden bilateral photophobia (9/10) strongly correlates with anterior uveitis.", "Active autoimmune condition (Methotrexate) elevates inflammatory index."]),
-    5.8
+    JSON.stringify([
+      "Severe Photophobia (9/10) with acute sudden onset strongly correlates with anterior uveitis.",
+      "Active autoimmune joint pain flags HLA-B27 spondyloarthropathy risk profile.",
+      "Deep perilimbal ciliary injection and 8/10 pain score elevate inflammatory urgency index to 91%."
+    ]),
+    5.8,
+    JSON.stringify([
+      { feature: "Severe Photophobia (9/10)", impact: 94, category: "Ocular", detail: "Hallmark sign of ciliary muscle spasm and iridocyclitis" },
+      { feature: "Perilimbal Redness & Pain (8/10)", impact: 88, category: "Ocular", detail: "Deep ciliary flush indicates active intraocular inflammation" },
+      { feature: "Active Autoimmune / Joint Pain", impact: 85, category: "Systemic", detail: "HLA-B27 associated anterior uveitis profile" },
+      { feature: "Sudden Onset (2 days)", impact: 82, category: "Timing", detail: "Acute explosive onset vs chronic insidious presentation" },
+      { feature: "Visual Distortion & Floaters", impact: 65, category: "Visual", detail: "Early anterior vitreous cellular spillover" }
+    ])
   );
 }
 
-console.log("✅ SQLite database initialized:", DB_PATH);
+console.log("✅ SQLite database initialized with Dr. Agarwal's Eye Hospital network:", DB_PATH);
 
 module.exports = db;
+

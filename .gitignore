@@ -66,14 +66,12 @@ coverage.xml
 
 # ── ML model artifacts (large binary files — store via DVC/LFS) ──
 backend/artifacts/*.pth
+backend/artifacts/*.pkl
 backend/artifacts/*.joblib
 backend/artifacts/*.h5
 backend/artifacts/*.keras
 backend/artifacts/*.onnx
-# Preserve pre-trained Random Forest pipeline and scaler
-!backend/artifacts/random_forest_pipeline.pkl
-!backend/artifacts/scaler.pkl
-!backend/artifacts/*.json
+# Keep the directory itself
 !backend/artifacts/.gitkeep
 
 # ── Training / experiment output ─────────────────────────────

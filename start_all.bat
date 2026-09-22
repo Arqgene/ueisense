@@ -1,104 +1,167 @@
 @echo off
 setlocal enabledelayedexpansion
-title Uveitis AI System - Master Launcher
+title Uveisense AI — Master Launcher
 cd /d "%~dp0"
 set "ROOT_DIR=%CD%"
 set "SERVER_DIR=%ROOT_DIR%\server"
+set "BACKEND_DIR=%ROOT_DIR%\backend"
 
+echo.
 echo ===================================================================
-echo           Uveitis AI Screening ^& Diagnosis System
+echo     Uveisense AI - Clinical Ophthalmology Diagnosis System
+echo     Arqgene x Dr. Agarwal's Eye Hospital Network
+echo     Clinical Workflow: Patient - Doctor - Senior Ratification
 echo ===================================================================
 echo.
 
-:: 1. Detect Python Interpreter
+:: ── Step 1: Detect Python ────────────────────────────────────────────────────
+echo [1/4] Detecting Python interpreter...
 set "PY_CMD="
+
 if exist "%ROOT_DIR%\.venv\Scripts\python.exe" (
     set "PY_CMD=%ROOT_DIR%\.venv\Scripts\python.exe"
-    echo [OK] Using virtual environment Python: .venv\Scripts\python.exe
-) else (
-    py -3.12 --version >nul 2>&1
-    if !errorlevel! equ 0 (
-        set "PY_CMD=py -3.12"
-        echo [OK] Using Python Launcher: py -3.12
-    ) else (
-        py --version >nul 2>&1
-        if !errorlevel! equ 0 (
-            set "PY_CMD=py"
-            echo [OK] Using Python Launcher: py
-        ) else (
-            python --version >nul 2>&1
-            if !errorlevel! equ 0 (
-                set "PY_CMD=python"
-                echo [OK] Using system Python: python
-            ) else (
-                echo [ERROR] Python 3.10+ was not found on your system.
-                echo Please install Python from https://www.python.org/
-                pause
-                exit /b 1
-            )
-        )
-    )
+    echo       OK  Virtual environment found: .venv
+    goto :python_done
 )
 
-:: 2. Check Node.js and NPM
+py -3.12 -c "import sys; sys.exit(0)" >nul 2>&1
+if not errorlevel 1 (
+    set "PY_CMD=py -3.12"
+    echo       OK  Python 3.12 launcher found: py -3.12
+    goto :python_done
+)
+
+if exist "%LOCALAPPDATA%\Programs\Python\Python312\python.exe" (
+    set "PY_CMD=%LOCALAPPDATA%\Programs\Python\Python312\python.exe"
+    echo       OK  Python 3.12 path found
+    goto :python_done
+)
+
+py -3.11 -c "import sys; sys.exit(0)" >nul 2>&1
+if not errorlevel 1 (
+    set "PY_CMD=py -3.11"
+    echo       OK  Python 3.11 launcher found: py -3.11
+    goto :python_done
+)
+
+py -c "import sys; sys.exit(0)" >nul 2>&1
+if not errorlevel 1 (
+    set "PY_CMD=py"
+    echo       OK  Python launcher found: py
+    goto :python_done
+)
+
+python -c "import sys; sys.exit(0)" >nul 2>&1
+if not errorlevel 1 (
+    set "PY_CMD=python"
+    echo       OK  System Python found
+    goto :python_done
+)
+
+echo       ERROR  Python 3.10+ not found.
+echo              Install from https://www.python.org/
+pause
+exit /b 1
+
+:python_done
+
+:: ── Step 2: Check Node.js ───────────────────────────────────────────────────
+echo.
+echo [2/4] Checking Node.js...
 where node >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Node.js was not found in your PATH.
-    echo Please install Node.js from https://nodejs.org/
+if errorlevel 1 (
+    echo       ERROR  Node.js not found in PATH.
+    echo              Install from https://nodejs.org/
     pause
     exit /b 1
 )
+for /f "tokens=*" %%v in ('node --version') do echo       OK  Node.js %%v
 
-:: 3. Check Server Dependencies
-if not exist "%SERVER_DIR%\node_modules" (
-    echo [*] Installing Node server dependencies - one-time setup...
-    cd /d "%SERVER_DIR%"
-    call npm.cmd install
-    cd /d "%ROOT_DIR%"
-)
-
-:: 4. Check Frontend Dependencies
-if not exist "%ROOT_DIR%\node_modules" (
-    echo [*] Installing frontend web dependencies - one-time setup...
-    cd /d "%ROOT_DIR%"
-    call npm.cmd install
-)
-
-:: 5. Clean up any previous instances on ports 8000, 3001, 5173
-echo [*] Checking and cleaning up previous server instances...
-powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT_DIR%\stop_servers.ps1" >nul 2>&1
-
-:: 6. Configure Environment Variables
-set "PORT=3001"
-set "PYTHON_BACKEND_URL=http://127.0.0.1:8000/predict"
-set "EYE_MODEL_PATH=%ROOT_DIR%\backend\models\best_model.pth"
-
+:: ── Step 3: Check Dependencies ──────────────────────────────────────────────
 echo.
-echo [*] Starting [1/3] Python PyTorch FastAPI Backend on Port 8000...
-start "Uveitis AI - Python ML Backend (Port 8000)" /D "%ROOT_DIR%" cmd /k ""%PY_CMD%" "%ROOT_DIR%\backend\server.py""
+echo [3/4] Checking Node.js dependencies...
+
+if exist "%SERVER_DIR%\node_modules" goto :server_deps_ok
+echo       Installing server dependencies [one-time setup]...
+cd /d "%SERVER_DIR%"
+call npm.cmd install --production
+if errorlevel 1 (
+    echo       ERROR  Server npm install failed.
+    pause
+    exit /b 1
+)
+cd /d "%ROOT_DIR%"
+echo       OK  Server dependencies installed.
+:server_deps_ok
+echo       OK  Server node_modules found.
+
+if exist "%ROOT_DIR%\node_modules" goto :frontend_deps_ok
+echo       Installing frontend dependencies [one-time setup]...
+cd /d "%ROOT_DIR%"
+call npm.cmd install
+if errorlevel 1 (
+    echo       ERROR  Frontend npm install failed.
+    pause
+    exit /b 1
+)
+echo       OK  Frontend dependencies installed.
+:frontend_deps_ok
+echo       OK  Frontend node_modules found.
+
+:: ── Step 4: Clear Ports ─────────────────────────────────────────────────────
+echo.
+echo [4/4] Clearing ports 5173, 3001, 8000...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%ROOT_DIR%\stop_servers.ps1" >nul 2>&1
+ping 127.0.0.1 -n 3 >nul
+echo       OK  Ports cleared.
+
+:: ── Launching Services ───────────────────────────────────────────────────────
+echo.
+echo ===================================================================
+echo   Launching 3 System Services in Separate Windows...
+echo ===================================================================
+echo.
+
+echo [1/3] Starting Python ML Backend (Port 8000)...
+start "UEISense - ML Backend" "%ROOT_DIR%\run_ml.bat"
 ping 127.0.0.1 -n 4 >nul
 
-echo [*] Starting [2/3] Node Express Database Server on Port 3001...
-start "Uveitis AI - Node Express API (Port 3001)" /D "%SERVER_DIR%" cmd /k "node "%SERVER_DIR%\index.js""
+echo [2/3] Starting Express REST API (Port 3001)...
+start "UEISense - Express API" "%ROOT_DIR%\run_api.bat"
 ping 127.0.0.1 -n 3 >nul
 
-echo [*] Starting [3/3] Vite React Frontend on Port 5173...
-start "Uveitis AI - Vite Web Frontend (Port 5173)" /D "%ROOT_DIR%" cmd /k "npm.cmd run dev"
+echo [3/3] Starting Vite Frontend (Port 5173)...
+start "UEISense - Vite Frontend" "%ROOT_DIR%\run_frontend.bat"
 ping 127.0.0.1 -n 4 >nul
 
-:: 7. Open Browser
-echo [*] Opening application in default web browser...
+:: ── Open Browser ─────────────────────────────────────────────────────────────
+echo.
+echo Opening application in default browser...
 start http://localhost:5173
 
 echo.
 echo ===================================================================
-echo   All services have started successfully!
+echo   All 3 Services Launched Successfully!
 echo.
-echo   - Web Application:       http://localhost:5173
-echo   - Node Database API:     http://localhost:3001/api/health
-echo   - Python ML Backend:     http://127.0.0.1:8000/docs
+echo   Service         URL                                  Status
+echo   --------------- ------------------------------------ -------
+echo   Frontend SPA    http://localhost:5173                Running
+echo   Express API     http://localhost:3001/api/health     Running
+echo   ML Backend      http://127.0.0.1:8000/docs           Running
 echo.
-echo   Keep this window open. Run 'stop_all.bat' to stop all services.
+echo   Clinical Endpoints:
+echo     Patient Intake:    http://localhost:5173/patient-portal
+echo     Doctor Login:      http://localhost:5173/doctor-login
+echo     Doctor Queue:      http://localhost:5173/doctor/queue
+echo.
+echo   Doctor Roster (Dr. Agarwal's Eye Hospital Network):
+echo     DR-AG-01  Dr. Soundari S.           Senior Consultant
+echo     DR-AG-02  Dr. Ramamurthy Sundar     Senior Consultant
+echo     DR-AG-03  Dr. V. Rajeshwari         Senior Consultant
+echo     DR-AG-04  Dr. Anand Parthasarathy   Junior Specialist
+echo     DR-AG-05  Dr. Preethi Govindarajan  Junior Specialist
+echo.
+echo   To stop all running services, run: stop_all.bat
 echo ===================================================================
 echo.
 pause

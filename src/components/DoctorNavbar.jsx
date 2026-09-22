@@ -10,30 +10,30 @@ import {
   Stethoscope,
   ChevronDown,
   Sparkles,
+  Eye,
 } from "lucide-react";
 import { useState } from "react";
+import { AGARWAL_CENTERS } from "../utils/agarwalCenters.js";
 
 export default function DoctorNavbar() {
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  // Retrieve stored doctor session or default
+  // Retrieve stored doctor session or default to Dr. Agarwal's flagship specialist
   const storedDoctor = (() => {
     try {
+      const active = localStorage.getItem("activeDoctor");
+      if (active) return JSON.parse(active);
       const saved = localStorage.getItem("uveitis_doctor");
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
-  })() || {
-    name: "Dr. Elena Rostova",
-    role: "Senior Uveitis Specialist",
-    clinic: "Metropolitan Ocular Immunology Center",
-    email: "dr.rostova@eyeclinic.org",
-  };
+  })() || AGARWAL_CENTERS[0];
 
   const handleLogout = () => {
     try {
+      localStorage.removeItem("activeDoctor");
       localStorage.removeItem("uveitis_doctor");
     } catch {}
     navigate("/doctor-login");
@@ -45,24 +45,25 @@ export default function DoctorNavbar() {
         {/* Brand */}
         <div className="doctor-brand-group">
           <div className="doctor-brand-badge" onClick={() => navigate("/doctor/queue")}>
-            <div className="doctor-brand-icon">
-              <Activity size={20} color="#38bdf8" />
+            <div className="doctor-brand-icon" style={{ background: "linear-gradient(135deg, #1e3a8a, #2563eb)" }}>
+              <Eye size={20} color="#ffffff" />
             </div>
             <div className="doctor-brand-text">
               <div className="doctor-brand-title">
-                UEISENSE <span>CLINICAL OS</span>
+                Uveisense <span>AI</span>
               </div>
               <div className="doctor-brand-subtitle">
-                Ophthalmic Neuro-Fuzzy & ViT Decision Support
+                Doctor Workspace • Dr. Agarwal's Network
               </div>
             </div>
           </div>
 
           <div className="doctor-system-pill">
             <span className="doctor-pulse-dot"></span>
-            <span>EMR Active • SQLite Ready</span>
+            <span>SQLite Synced • Live EMR Active</span>
           </div>
         </div>
+
 
         {/* Navigation Pages */}
         <nav className="doctor-nav-links">
@@ -135,8 +136,30 @@ export default function DoctorNavbar() {
                   .join("")}
               </div>
               <div className="doctor-profile-info">
-                <div className="doctor-profile-name">{storedDoctor.name}</div>
-                <div className="doctor-profile-clinic">{storedDoctor.clinic}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span className="doctor-profile-name">{storedDoctor.name}</span>
+                  <span
+                    style={{
+                      fontSize: "0.66rem",
+                      fontWeight: 800,
+                      padding: "1px 6px",
+                      borderRadius: "6px",
+                      backgroundColor: storedDoctor.role === "senior" ? "rgba(16,185,129,0.2)" : "rgba(245,158,11,0.2)",
+                      color: storedDoctor.role === "senior" ? "#34d399" : "#fbbf24",
+                      border: `1px solid ${storedDoctor.role === "senior" ? "rgba(16,185,129,0.4)" : "rgba(245,158,11,0.4)"}`,
+                    }}
+                  >
+                    {storedDoctor.role === "senior" ? "Senior Consultant" : "Junior Specialist"}
+                  </span>
+                </div>
+                <div className="doctor-profile-clinic">
+                  {storedDoctor.clinic}
+                  {storedDoctor.role === "junior" && storedDoctor.supervisor_name && (
+                    <span style={{ marginLeft: "4px", color: "#94a3b8", fontSize: "0.7rem" }}>
+                      • Supervised by {storedDoctor.supervisor_name.split(",")[0]}
+                    </span>
+                  )}
+                </div>
               </div>
               <ChevronDown
                 size={14}

@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { diagnosisApi } from "../api/client.js";
 import { motion, AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -160,7 +161,7 @@ export default function DoctorFinalDiagnosis() {
       .then((data) => {
         if (data && data.id) setPatientData(normalizePatient(data));
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [patientId]);
 
   const rawFallback = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
@@ -204,13 +205,23 @@ export default function DoctorFinalDiagnosis() {
     }, 0);
   }
 
+  const activeDoc = (() => {
+    try {
+      const a = localStorage.getItem("activeDoctor");
+      return a ? JSON.parse(a) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const doctorId = activeDoc?.id || patient.assigned_doctor_id || "DR-AG-01";
+
   const handleSave = async (e) => {
     e.preventDefault();
     // Persist final diagnosis to DB
     try {
       await diagnosisApi.save({
         patient_id: patient.id,
-        doctor_id: "DR-001",
+        doctor_id: doctorId,
         final_diagnosis: finalDiagnosis,
         severity_grade: finalSeverity,
         consensus_score: consensusScore,
@@ -273,10 +284,13 @@ export default function DoctorFinalDiagnosis() {
         >
           <div>
             <div style={{ fontSize: "0.78rem", color: "#64748b" }}>
-              <span style={{ fontWeight: 800 }}>{patient.id}</span> — Layer 7: Consensus Score & Final Diagnosis
+              <span style={{ fontWeight: 800 }}>{patient.id}</span> — Layer 7: Consensus Score &amp; Final Diagnosis
             </div>
-            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#0f172a" }}>
+            <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#0f172a" }}>
               {patient.name} — {patient.affectedEye}
+            </div>
+            <div style={{ fontSize: "0.82rem", color: "#475569", marginTop: "2px" }}>
+              {patient.hospital_branch || "Dr. Agarwal's Eye Hospital"} • Attending: <strong>{patient.assigned_doctor_name || activeDoc?.name || "Uveitis Specialist"}</strong>
             </div>
           </div>
           <div
@@ -359,8 +373,8 @@ export default function DoctorFinalDiagnosis() {
                 {isHigh
                   ? "Immediate ophthalmology review. Admit if IOP raised or vision threatened."
                   : isMod
-                  ? "Outpatient ophthalmology within 48 hours. Start topical therapy now."
-                  : "Routine ophthalmology within 1 week. Topical lubricants."}
+                    ? "Outpatient ophthalmology within 48 hours. Start topical therapy now."
+                    : "Routine ophthalmology within 1 week. Topical lubricants."}
               </div>
             </div>
 

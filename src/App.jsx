@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home.jsx";
+import PatientPortal from "./pages/PatientPortal.jsx";
 import UveitisQuestionnaire from "./pages/UveitisQuestionnaire.jsx";
 import DoctorLogin from "./pages/DoctorLogin.jsx";
 import DoctorQueue from "./pages/DoctorQueue.jsx";
@@ -20,7 +21,10 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/questionnaire" element={<UveitisQuestionnaire />} />
+        <Route path="/patient-portal" element={<PatientPortal />} />
+        <Route path="/patient" element={<Navigate to="/patient-portal" replace />} />
+        <Route path="/questionnaire" element={<PatientPortal />} />
+        <Route path="/questionnaire-deep" element={<UveitisQuestionnaire />} />
         <Route path="/doctor-login" element={<DoctorLogin />} />
         <Route path="/doctor" element={<Navigate to="/doctor/queue" replace />} />
         <Route path="/doctor/queue" element={<DoctorQueue />} />
@@ -36,4 +40,5 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
 

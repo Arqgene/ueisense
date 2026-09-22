@@ -1,0 +1,33 @@
+# ─── Dockerfile.frontend — React Vite SPA (multi-stage build + Nginx) ─────────
+FROM node:20-slim AS builder
+
+LABEL stage="builder"
+
+WORKDIR /app
+
+# Install frontend dependencies
+COPY package.json package-lock.json* ./
+RUN npm ci && npm cache clean --force
+
+# Copy source and build
+COPY . .
+RUN npm run build
+
+# ─── Production Stage — Nginx to serve static assets ─────────────────────────
+FROM nginx:1.25-alpine AS production
+
+LABEL maintainer="Arqgene x Dr. Agarwal's Eye Hospital"
+LABEL description="UEISense Frontend — React SPA served via Nginx"
+
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Nginx config: SPA fallback + API reverse proxy
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80 443
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD wget -qO- http://localhost:80/ | grep -q "UEISense\|html" || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

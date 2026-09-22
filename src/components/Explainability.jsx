@@ -1,32 +1,32 @@
 import { motion } from "framer-motion";
-import { Eye, MessageSquareText, Layers3, Sparkles } from "lucide-react";
+import { Eye, MessageSquareText, Layers3, Sparkles, Sliders, BrainCircuit } from "lucide-react";
 
 const items = [
   {
     icon: <Eye size={18} />,
-    title: "Visual explanation",
-    text: "Heatmaps show which regions contributed to the prediction, such as keratic precipitates, cells, flare, retinal lesions, or vitreous haze.",
+    title: "Image Grad-CAM Saliency",
+    text: "Deep visual heatmaps localize keratic precipitates, anterior chamber flare, ciliary flush, and pupillary irregularities on slitlamp photographs.",
+  },
+  {
+    icon: <Sliders size={18} />,
+    title: "Question Model Feature Attribution",
+    text: "Transparent weight attribution ranks symptom scores (photophobia, redness, pain) and systemic risk factors (HLA-B27, joint pain, prior uveitis).",
   },
   {
     icon: <MessageSquareText size={18} />,
-    title: "Text explanation",
-    text: "The system generates human-readable reasoning so the output can be reviewed by clinicians or used for triage documentation.",
+    title: "Clinician-Readable Plain Language",
+    text: "Produces human-readable clinical justifications explaining why a case was flagged, directly accessible to both patient and consulting ophthalmologist.",
   },
   {
-    icon: <Layers3 size={18} />,
-    title: "Layered reasoning",
-    text: "Each layer contributes one clinical function: suspicion, validation, localization, classification, and explanation.",
-  },
-  {
-    icon: <Sparkles size={18} />,
-    title: "Trust calibration",
-    text: "A confidence-aware summary helps users understand when the model is strong and when image retake or review is needed.",
+    icon: <BrainCircuit size={18} />,
+    title: "Dr. Agarwal's Diagnostic Alignment",
+    text: "Calibrated against real-world uveitis grading protocols to ensure high diagnostic concordance and eliminate false-negative acute crises.",
   },
 ];
 
 export default function Explainability() {
   return (
-    <section className="section" id="explainability">
+    <section className="section" id="xai">
       <div className="container">
         <motion.div
           className="section-head"
@@ -35,11 +35,10 @@ export default function Explainability() {
           viewport={{ once: true }}
           transition={{ duration: 0.55 }}
         >
-          <span className="section-label">Explainability</span>
-          <h2 className="section-title">Dual-mode XAI for clinical trust.</h2>
+          <span className="section-label">Explainable AI (XAI)</span>
+          <h2 className="section-title">Transparent Dual-Mode Explainable AI</h2>
           <p className="section-subtitle">
-            The framework explains itself twice: once visually, once in
-            clinician-readable language.
+            Every clinical decision is justified twice: visually via Grad-CAM image heatmaps and clinically via question feature importance.
           </p>
         </motion.div>
 
@@ -63,3 +62,4 @@ export default function Explainability() {
     </section>
   );
 }
+

@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python requirements (CPU PyTorch + torchvision matched from official CPU wheel repo)
+# Install Python requirements (CPU PyTorch + torchvision from official CPU wheel repo)
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
     pip install --no-cache-dir -r backend/requirements.txt

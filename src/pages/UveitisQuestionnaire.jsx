@@ -432,7 +432,7 @@ function isStepComplete(form, stepIndex) {
 
     // Step 1 — Primary Eye Symptoms
     case 1: {
-      const hasPainDetails = Number(form.pain_score) > 0 
+      const hasPainDetails = Number(form.pain_score) > 0
         ? form.pain_location && form.pain_nature.length > 0 && form.pain_with_movement
         : true;
       return (
@@ -890,38 +890,38 @@ export default function UveitisQuestionnaire() {
         <div className="uf-field-group">
           <label className="uf-field-label">What is your age? *</label>
           <input
-      className="uf-input"
-      type="number"
-      placeholder="e.g. 42"
-      min="0"
-      max="130"
-      value={formData.age}
-      onChange={(e) => {
-        const age = Number(e.target.value);
+            className="uf-input"
+            type="number"
+            placeholder="e.g. 42"
+            min="0"
+            max="130"
+            value={formData.age}
+            onChange={(e) => {
+              const age = Number(e.target.value);
 
-        let ageScore = 0;
+              let ageScore = 0;
 
-        if (age < 12 || age > 60) {
-          ageScore = 2;
-        } else if (age >= 40 && age <= 60) {
-          ageScore = 1.5;
-        } else if (age >= 12 && age < 40) {
-          ageScore = 1;
-        }
+              if (age < 12 || age > 60) {
+                ageScore = 2;
+              } else if (age >= 40 && age <= 60) {
+                ageScore = 1.5;
+              } else if (age >= 12 && age < 40) {
+                ageScore = 1;
+              }
 
-        updateField("age", e.target.value);
-        updateField("ageScore", ageScore);
-      }}
-    />
-    <small className="uf-field-hint">
-      Age Risk Weightage:
-      <br />
-      • Below 12 or above 60 years – 2 points
-      <br />
-      • 40–60 years – 1.5 points
-      <br />
-      • 12–40 years – 1 point
-    </small>
+              updateField("age", e.target.value);
+              updateField("ageScore", ageScore);
+            }}
+          />
+          <small className="uf-field-hint">
+            Age Risk Weightage:
+            <br />
+            • Below 12 or above 60 years – 2 points
+            <br />
+            • 40–60 years – 1.5 points
+            <br />
+            • 12–40 years – 1 point
+          </small>
         </div>
 
         {/* Q2: Sex */}
@@ -969,7 +969,7 @@ export default function UveitisQuestionnaire() {
           <option value="" disabled>Select…</option>
           <option value="Suddenly">Suddenly (over a few hours/days)</option>
           <option value="Gradually">Gradually (over weeks)</option>
-          
+
         </select>
       </div>
     </div>

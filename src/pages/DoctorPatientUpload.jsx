@@ -81,6 +81,16 @@ export default function DoctorImagingUpload() {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
+  const activeDoctor = (() => {
+    try {
+      const a = localStorage.getItem("activeDoctor");
+      return a ? JSON.parse(a) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const currentDoctorId = activeDoctor?.id || "DR-AG-01";
+
   const [patientData, setPatientData] = useState(null);
 
   useEffect(() => {
@@ -125,7 +135,7 @@ export default function DoctorImagingUpload() {
     reader.readAsDataURL(file);
     // Also upload to server DB immediately
     try {
-      const res = await imagingApi.upload(patient.id, "DR-001", selectedSample.type || "slitlamp", file);
+      const res = await imagingApi.upload(patient.id, currentDoctorId, selectedSample.type || "slitlamp", file);
       setImagingId(res.imaging_id);
     } catch (e) {
       console.warn("Image upload to DB failed (offline mode):", e.message);
@@ -137,7 +147,7 @@ export default function DoctorImagingUpload() {
     // Call DB API to run preprocessing if we have a server imaging ID
     if (imagingId) {
       try {
-        await imagingApi.preprocess(imagingId, "DR-001");
+        await imagingApi.preprocess(imagingId, currentDoctorId);
       } catch (e) {
         console.warn("Preprocessing API failed (offline mode):", e.message);
       }

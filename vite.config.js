@@ -7,11 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/predict': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
       '/predict-image': {
-        target: 'http://127.0.0.1:8000',
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
       },
       '/api': {

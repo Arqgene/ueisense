@@ -45,9 +45,14 @@ export const patientsApi = {
     const params = new URLSearchParams(filters).toString();
     return get(`/patients${params ? `?${params}` : ""}`);
   },
-  get:    (id)   => get(`/patients/${id}`),
+  get:    (id, doctorId) => get(`/patients/${id}${doctorId ? `?doctor_id=${doctorId}` : ""}`),
   create: (data) => post("/patients", data),
   update: (id, data) => patch(`/patients/${id}`, data),
+  closeCase: (id, data) => post(`/patients/${id}/close-case`, data),
+  submitClinicalImaging: (id, data) => post(`/patients/${id}/clinical-imaging`, data),
+  submitJuniorFeatures: (id, data) => post(`/patients/${id}/junior-feature-submission`, data),
+  seniorApprove: (id, data) => post(`/patients/${id}/senior-approve`, data),
+  referDoctor: (id, data) => post(`/patients/${id}/refer-doctor`, data),
 };
 
 // ─── Questionnaire ────────────────────────────────────────────────────────
@@ -108,6 +113,11 @@ export const diagnosisApi = {
   update: (id, data)  => patch(`/diagnosis/${id}`, data),
 };
 
+// ─── Patient Intake Unified Sync ──────────────────────────────────────────
+export const patientIntakeApi = {
+  submit: (intakeData) => post("/patient-intake", intakeData),
+};
+
 // ─── Stats & Audit ────────────────────────────────────────────────────────
 export const statsApi = {
   get:   ()           => get("/stats"),
@@ -119,17 +129,19 @@ export const healthCheck = () => get("/health");
 
 // Default export: all API namespaces
 const api = {
-  auth:        authApi,
-  patients:    patientsApi,
+  auth:          authApi,
+  patients:      patientsApi,
   questionnaire: questionnaireApi,
-  neuroFuzzy:  neuroFuzzyApi,
-  referrals:   referralsApi,
-  assessments: assessmentsApi,
-  imaging:     imagingApi,
-  finalReview: finalReviewApi,
-  diagnosis:   diagnosisApi,
-  stats:       statsApi,
+  neuroFuzzy:    neuroFuzzyApi,
+  referrals:     referralsApi,
+  assessments:   assessmentsApi,
+  imaging:       imagingApi,
+  finalReview:   finalReviewApi,
+  diagnosis:     diagnosisApi,
+  patientIntake: patientIntakeApi,
+  stats:         statsApi,
   healthCheck,
 };
 
 export default api;
+

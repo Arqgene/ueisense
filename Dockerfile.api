@@ -1,0 +1,39 @@
+# ─── Dockerfile.api — Node.js Express API + SQLite ────────────────────────────
+FROM node:20-slim
+
+LABEL maintainer="Arqgene x Dr. Agarwal's Eye Hospital"
+LABEL description="UEISense API — Express REST API with SQLite clinical database"
+
+# SQLite native build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    python3 \
+    build-essential \
+    sqlite3 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install production server dependencies
+COPY server/package.json ./server/package.json
+COPY server/package-lock.json* ./server/package-lock.json
+RUN cd server && npm ci --omit=dev && npm cache clean --force
+
+# Copy server code
+COPY server ./server
+
+# Create persistent directories
+RUN mkdir -p server/db server/uploads
+
+ENV PORT=3001
+ENV NODE_ENV=production
+ENV PYTHON_BACKEND_URL=http://ml-backend:8000/predict
+ENV PYTHON_IMAGE_URL=http://ml-backend:8000/predict-image
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=20s --timeout=8s --start-period=10s --retries=5 \
+    CMD curl -f http://localhost:3001/api/health || exit 1
+
+CMD ["node", "server/index.js"]

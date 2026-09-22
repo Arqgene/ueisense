@@ -128,7 +128,25 @@ export default function DoctorFinalReview() {
   const rawFallback = samplePatients.find((p) => p.id === patientId) || samplePatients[0];
   const patient = patientData || normalizePatient(rawFallback);
   const qData = questionnaireModelData[patient.id] || questionnaireModelData.default;
-  const cnnData = presetSamples[0].cnnResult;
+  const cnnPreset = presetSamples[0].cnnResult;
+
+  const qProb = patientData?.neuro_fuzzy?.uveitis_prob !== undefined
+    ? (Number(patientData.neuro_fuzzy.uveitis_prob) <= 1.0 ? Number(patientData.neuro_fuzzy.uveitis_prob) * 100 : Number(patientData.neuro_fuzzy.uveitis_prob))
+    : (patient.uveitisProbability || qData.probability);
+
+  const cnnConf = patientData?.cnn?.cnn_confidence !== undefined
+    ? Number(patientData.cnn.cnn_confidence)
+    : cnnPreset.confidence;
+
+  const cnnData = patientData?.cnn
+    ? {
+        acCells: patientData.cnn.ac_cell_grade || cnnPreset.acCells,
+        flare: patientData.cnn.flare_intensity || cnnPreset.flare,
+        kps: patientData.cnn.kp_type || cnnPreset.kps,
+        pupil: patientData.cnn.pupil_reactivity || cnnPreset.pupil,
+        confidence: cnnConf,
+      }
+    : cnnPreset;
 
   const isHigh = patient.riskTier === "High";
   const isMod = patient.riskTier === "Moderate";
@@ -137,13 +155,23 @@ export default function DoctorFinalReview() {
   const [revealed, setRevealed] = useState(false);
   const [revealStep, setRevealStep] = useState(0); // 0=not started, 1=revealing, 2=done
 
-  const combinedScore = (qData.probability * 0.5 + cnnData.confidence * 0.5).toFixed(1);
+  const combinedScore = (qProb * 0.5 + cnnConf * 0.5).toFixed(1);
+
+  const activeDoc = (() => {
+    try {
+      const a = localStorage.getItem("activeDoctor");
+      return a ? JSON.parse(a) : null;
+    } catch {
+      return null;
+    }
+  })();
+  const doctorId = activeDoc?.id || patient.assigned_doctor_id || "DR-AG-01";
 
   const handleReveal = async () => {
     setRevealStep(1);
     // Call DB API to unseal CNN results
     try {
-      await finalReviewApi.reveal(patient.id, "DR-001");
+      await finalReviewApi.reveal(patient.id, doctorId);
     } catch (e) {
       console.warn("Reveal API failed (offline mode):", e.message);
     }
@@ -153,7 +181,7 @@ export default function DoctorFinalReview() {
       // Save final review record
       finalReviewApi.save({
         patient_id: patient.id,
-        doctor_id: "DR-001",
+        doctor_id: doctorId,
         combined_score: Number(combinedScore),
         uncertainty_level: "Low",
         doctor_vs_ai_match: 1,
@@ -200,14 +228,17 @@ export default function DoctorFinalReview() {
         >
           <div>
             <div style={{ fontSize: "0.78rem", color: "#64748b", marginBottom: "2px" }}>
-              <span style={{ fontWeight: 800 }}>{patient.id}</span> — Layer 6: Final Review & AI Disclosure
+              <span style={{ fontWeight: 800 }}>{patient.id}</span> — Layer 6: Final Review &amp; AI Disclosure
             </div>
-            <div style={{ fontSize: "1.2rem", fontWeight: 900, color: "#0f172a" }}>{patient.name}</div>
+            <div style={{ fontSize: "1.35rem", fontWeight: 900, color: "#0f172a" }}>{patient.name}</div>
+            <div style={{ fontSize: "0.82rem", color: "#475569", marginTop: "2px" }}>
+              {patient.hospital_branch || "Dr. Agarwal's Eye Hospital"} • Attending: <strong>{patient.assigned_doctor_name || "Uveitis Specialist"}</strong>
+            </div>
           </div>
           <div style={{ display: "flex", gap: "20px" }}>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Questionnaire AI</div>
-              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2563eb" }}>{formatPercent(qData.probability)}</div>
+              <div style={{ fontSize: "1.5rem", fontWeight: 900, color: "#2563eb" }}>{formatPercent(qProb)}</div>
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Image CNN AI</div>
