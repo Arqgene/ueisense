@@ -18,10 +18,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Upgrade pip to avoid metadata name mismatch on newer wheels
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
 # Install Python dependencies (CPU-only PyTorch + torchvision — lightweight)
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir \
-    torch torchvision --index-url https://download.pytorch.org/whl/cpu \
+    torch torchvision --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple \
     && pip install --no-cache-dir -r backend/requirements.txt
 
 COPY backend ./backend
