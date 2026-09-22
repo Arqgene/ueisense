@@ -17,7 +17,6 @@ WORKDIR /app/server
 
 # Install production server dependencies
 COPY server/package.json ./package.json
-COPY server/package-lock.json* ./package-lock.json
 RUN npm install --omit=dev && npm cache clean --force
 
 # Copy server code

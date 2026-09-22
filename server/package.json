@@ -9,7 +9,7 @@
     "dev": "node --watch index.js"
   },
   "dependencies": {
-    "better-sqlite3": "*",
+    "better-sqlite3": "^11.8.1",
     "cors": "*",
     "express": "*",
     "multer": "*"
