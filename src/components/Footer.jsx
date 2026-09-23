@@ -13,6 +13,9 @@ export default function Footer() {
               <strong style={{ color: "#ffffff", fontSize: "1.2rem", display: "block" }}>
                 Uveisense <span style={{ color: "#60a5fa" }}>AI</span>
               </strong>
+              <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                Arqgene × Dr. Agarwal's Eye Hospital
+              </span>
             </div>
           </div>
           <p style={{ fontSize: "0.86rem", lineHeight: 1.6, color: "#94a3b8", margin: 0 }}>

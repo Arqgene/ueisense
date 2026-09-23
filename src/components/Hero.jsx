@@ -31,13 +31,16 @@ export default function Hero() {
               Uveisense AI
             </span>
             <span style={{ color: "#94a3b8" }}>•</span>
+            <span style={{ fontWeight: 700, color: "#059669", fontSize: "0.82rem" }}>
+              Arqgene × Dr. Agarwal's Eye Hospital
+            </span>
             <span style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: 600 }}>
               • Clinical AI Platform
             </span>
           </div>
 
           <h1 style={{ fontSize: "2.75rem", lineHeight: 1.15, fontWeight: 900, color: "#0f172a", marginBottom: "16px" }}>
-            Uveisense AI: Intelligent Uveitis Screening &amp;<br />
+            Uveisense AI: Intelligent Uveitis Screening &amp;{" "}
             <span
               style={{
                 background: "linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)",
@@ -98,13 +101,13 @@ export default function Hero() {
             </Link>
           </div>
 
-          <div className="hero-trust" style={{ display: "grid", gap: "16px", paddingTop: "20px", borderTop: "1px solid rgba(226,232,240,0.8)" }}>
+          <div className="hero-trust" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", paddingTop: "20px", borderTop: "1px solid rgba(226,232,240,0.8)" }}>
             <div className="trust-item" style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
               <div style={{ padding: "8px", borderRadius: "10px", backgroundColor: "#eff6ff", color: "#2563eb" }}>
                 <Building2 size={20} />
               </div>
               <div>
-                <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>5 Regional Hub</strong>
+                <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>5 Regional Hubs</strong>
                 <span style={{ fontSize: "0.78rem", color: "#64748b" }}>Dr. Agarwal's Network</span>
               </div>
             </div>
@@ -126,16 +129,6 @@ export default function Hero() {
               <div>
                 <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>Direct Specialist</strong>
                 <span style={{ fontSize: "0.78rem", color: "#64748b" }}>Automated branch sync</span>
-              </div>
-            </div>
-
-            <div className="trust-item" style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-              <div style={{ padding: "8px", borderRadius: "10px", backgroundColor: "#fce7f3", color: "#db2777" }}>
-                <Eye size={20} />
-              </div>
-              <div>
-                <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>Uveitis</strong>
-                <span style={{ fontSize: "0.78rem", color: "#64748b" }}>5th leading cause of blindness</span>
               </div>
             </div>
           </div>
