@@ -40,10 +40,10 @@ export default function ClinicalProblem() {
           viewport={{ once: true }}
           transition={{ duration: 0.55 }}
         >
-          <span className="section-label">Partnership &amp; Mission</span>
-          <h2 className="section-title">The Arqgene × Dr. Agarwal's Clinical Mission</h2>
+          <span className="section-label">Clinical Challenge &amp; Mission</span>
+          <h2 className="section-title">The Clinical Challenge &amp; Diagnostic Mission</h2>
           <p className="section-subtitle">
-            Bridging the gap between intelligent home triage and India's foremost ocular immunology clinics to prevent irreversible vision loss and streamline urgent care.
+            Bridging the gap between intelligent home triage and specialized ocular immunology clinics to prevent irreversible vision loss and streamline urgent care.
           </p>
         </motion.div>
 

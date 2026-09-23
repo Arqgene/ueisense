@@ -12,32 +12,6 @@ export default function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          {/* Partnership Banner Badge */}
-          <div
-            className="hero-badge"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "6px 14px",
-              borderRadius: "20px",
-              background: "linear-gradient(90deg, rgba(37,99,235,0.12) 0%, rgba(16,185,129,0.12) 100%)",
-              border: "1px solid rgba(37,99,235,0.3)",
-              marginBottom: "16px",
-            }}
-          >
-            <span className="hero-badge-dot" style={{ backgroundColor: "#2563eb" }} />
-            <span style={{ fontWeight: 900, color: "#1e3a8a", fontSize: "0.85rem" }}>
-              Uveisense AI
-            </span>
-            <span style={{ color: "#94a3b8" }}>•</span>
-            <span style={{ fontWeight: 700, color: "#059669", fontSize: "0.82rem" }}>
-              Arqgene × Dr. Agarwal's Eye Hospital
-            </span>
-            <span style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: 600 }}>
-              • Clinical AI Platform
-            </span>
-          </div>
 
           <h1 style={{ fontSize: "2.75rem", lineHeight: 1.15, fontWeight: 900, color: "#0f172a", marginBottom: "16px" }}>
             Uveisense AI: Intelligent Uveitis Screening &amp;{" "}
@@ -104,11 +78,11 @@ export default function Hero() {
           <div className="hero-trust" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", paddingTop: "20px", borderTop: "1px solid rgba(226,232,240,0.8)" }}>
             <div className="trust-item" style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
               <div style={{ padding: "8px", borderRadius: "10px", backgroundColor: "#eff6ff", color: "#2563eb" }}>
-                <Building2 size={20} />
+                <Eye size={20} />
               </div>
               <div>
-                <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>5 Regional Hubs</strong>
-                <span style={{ fontSize: "0.78rem", color: "#64748b" }}>Dr. Agarwal's Network</span>
+                <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>5th Leading Cause</strong>
+                <span style={{ fontSize: "0.78rem", color: "#64748b" }}>of blindness worldwide</span>
               </div>
             </div>
 
