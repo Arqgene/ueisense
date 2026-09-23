@@ -48,9 +48,6 @@ export default function Navbar() {
                 Uveisense <span style={{ color: "#2563eb" }}>AI</span>
               </span>
             </div>
-            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: 700, letterSpacing: "0.03em" }}>
-              ARQGENE × DR. AGARWAL'S EYE HOSPITAL
-            </span>
           </div>
         </Link>
 

@@ -26,21 +26,6 @@ export default function CTA() {
           }}
         >
           <div className="cta-copy" style={{ maxWidth: "600px" }}>
-            <span
-              className="section-label"
-              style={{
-                color: "#60a5fa",
-                backgroundColor: "rgba(96, 165, 250, 0.15)",
-                padding: "4px 12px",
-                borderRadius: "8px",
-                fontSize: "0.78rem",
-                fontWeight: 800,
-                display: "inline-block",
-                marginBottom: "12px",
-              }}
-            >
-              UVEISENSE AI • ARQGENE × DR. AGARWAL'S EYE HOSPITAL
-            </span>
             <h2 className="section-title" style={{ color: "#ffffff", fontSize: "2.2rem", fontWeight: 900, margin: "0 0 12px" }}>
               Experience AI-Powered Uveitis Care Today
             </h2>
